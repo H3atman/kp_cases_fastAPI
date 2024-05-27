@@ -9,3 +9,5 @@ class UserBase(Base):
     password = Column(String)
     is_logged_in = Column(Boolean, default=False)
     failed_login_attempts = Column(Integer, default=0)
+    mps_cps = Column(String)
+    ppo_cpo = Column(String)

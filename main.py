@@ -18,6 +18,8 @@ class UserBaseModel(BaseModel):
     password: str
     is_logged_in: bool = False
     failed_login_attempts: int
+    mps_cps: str
+    ppo_cpo:str
 
 class UserLoginModel(BaseModel):
     username: str

@@ -1,59 +1,59 @@
 import streamlit as st
-import streamlit_authenticator as stauth
 import requests
-from fastapi import HTTPException
+from streamlit_cookies_manager import EncryptedCookieManager
+import jwt
 
-# Function to fetch users from FastAPI
-def fetch_users():
-    response = requests.get("http://127.0.0.1:8000/users/")
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail="Failed to fetch users")
-    return response.json()
+st.set_page_config("KP Cases Detailed Entry")
 
-# Fetch users from FastAPI
-users_data = fetch_users()
-
-# Prepare data for streamlit-authenticator
-credentials = {
-    "usernames": {
-        user['username']: {
-            "name": user['username'],
-            "password": user['password'],
-            "mps_cps": user.get('mps_cps', ''),  # Include mps_cps, defaulting to an empty string if not present
-            "ppo_cpo": user.get('ppo_cpo', '')   # Include ppo_cpo, defaulting to an empty string if not present
-        }
-        for user in users_data
+css = '''
+<style>
+    [data-testid="stSidebar"] {
+        display: none;
     }
-}
+</style>
+'''
+st.markdown(css, unsafe_allow_html=True)
 
-# Initialize authenticator
-authenticator = stauth.Authenticate(
-    credentials,
-    "my_app",
-    "auth_cookie_name",
-    cookie_expiry_days=30
-)
+# Function to check login status
+def check_login():
+    token = st.session_state.get('access_token', None)
+    if token:
+        response = requests.get("http://127.0.0.1:8000/users/me", headers={"Authorization": f"Bearer {token}"})
+        return response.status_code == 200
+    return False
 
-# Check if user is authenticated
+# Function to log in
+def login(username, password):
+    response = requests.post("http://127.0.0.1:8000/token", data={"username": username, "password": password})
+    if response.status_code == 200:
+        data = response.json()
+        st.session_state['access_token'] = data['access_token']
+        return True
+    else:
+        return False
+
+# Display login form if not authenticated
 if 'authentication_status' not in st.session_state:
-    st.session_state['authentication_status'] = None
+    st.session_state['authentication_status'] = check_login()
 
-# Display login widget if not authenticated
-if st.session_state['authentication_status'] is None:
-    login_slot = st.empty()
-    login_slot.title("User Login")
-    authenticator.login()
-
-# Process authentication result
-if st.session_state["authentication_status"]:
-    login_slot = st.empty()
-    login_slot.empty()  # Remove login title
-    st.session_state['username'] = st.session_state["name"]  # Store username in session state
-    authenticator.logout()  # Logout after storing username
-    username = st.session_state['username']  # Retrieve username from session state
-    user_info = credentials["usernames"].get(username, {})
-    mps_cps = user_info.get("mps_cps", "")
-    ppo_cpo = user_info.get("ppo_cpo", "")
-    st.title(f'Welcome *{ppo_cpo}*, *{mps_cps}*')
+if st.session_state['authentication_status']:
+    st.title(f"Welcome {st.session_state.get('username', 'User')}")
+    if st.button('Logout'):
+        st.session_state['authentication_status'] = False
+        st.session_state['access_token'] = None
+        st.session_state['username'] = None
 else:
-    st.warning('Please enter your username and password')
+    st.title("KP Cases Detailed Encoding")
+    with st.form("login_form"):
+        st.subheader("User Login")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submit_button = st.form_submit_button("Login")
+        
+        if submit_button:
+            if login(username, password):
+                st.session_state['username'] = username
+                st.session_state['authentication_status'] = True
+                st.experimental_rerun()
+            else:
+                st.error('Invalid username or password')

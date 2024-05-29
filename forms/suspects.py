@@ -1,5 +1,7 @@
 import streamlit as st
 import requests
+from pydantic import ValidationError
+from modules.dataValidation import SuspectData_Validation
 
 @st.cache_data(ttl=1800)  # Cache data for 30 minutes
 def get_brgy_city_mun(mps_cps):
@@ -50,7 +52,54 @@ def addSuspect(mps_cps):
     citymun, brgy = st.columns(2)
     sus_cityMun = citymun.selectbox("City/Municipality",([city_mun_value]),disabled=True,key="sus_citymun")
     sus_brgy = brgy.selectbox("Barangay",brgy_values,placeholder="Please select a Barangay",key="sus_abrgy",index=None)
-    sus_add_street = st.text_input("House No./Street Name",key="sus_strName")
+    sus_strName = st.text_input("House No./Street Name",key="sus_strName")
 
 
     st.write("---")
+
+    # Create a dictionary of the data
+    data = {
+        "sus_fname": sus_fname,
+        "sus_midname": sus_midname,
+        "sus_lname": sus_lname,
+        "sus_qlfr": sus_qlfr,
+        "sus_alias": sus_alias,
+        "sus_gndr": sus_gndr,
+        "sus_age": sus_age,
+        "sus_distprov": sus_distprov,
+        "sus_cityMun": sus_cityMun,
+        "sus_brgy": sus_brgy,
+        "sus_strName": sus_strName
+    }
+
+    # Mapping of field names to user-friendly names
+    field_name_mapping = {
+        "sus_fname": "Suspect's First Name",
+        "sus_midname": "Suspect's Middle Name",
+        "sus_lname": "Suspect's Last Name",
+        "sus_qlfr": "Qualifier",
+        "sus_alias": "Alias",
+        "sus_gndr": "Gender",
+        "sus_age": "Age",
+        "sus_distprov": "District/Province",
+        "sus_cityMun": "City/Municipality",
+        "sus_brgy": "Barangay",
+        "sus_strName": "House No./Street Name"
+    }
+
+
+    # Validate the data using Pydantic
+    suspect_data = ""
+    # Validate the data using Pydantic
+    try:
+        suspect_data = SuspectData_Validation(**data)
+        # Data is valid, proceed with database operations
+        return suspect_data
+    except ValidationError as e:
+        for error in e.errors():
+            field = error['loc'][0]
+            message = error['msg']
+            user_friendly_field = field_name_mapping.get(field, field)
+            st.error(f"Error in {user_friendly_field}: {message}")
+    finally:
+        st.write(suspect_data)

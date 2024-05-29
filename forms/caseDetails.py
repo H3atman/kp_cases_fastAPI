@@ -1,6 +1,8 @@
 import streamlit as st
 from modules.ui_models import input_time_committed, input_time_reported
 import datetime
+from modules.dataValidation import Case_Detail_Validation
+from pydantic import ValidationError
 
 
 
@@ -67,3 +69,37 @@ def case_Details():
 
 
     st.write("---")
+
+    # Create a directory of data
+    data = {
+        "det_narrative": det_narrative,
+        "dt_reported": dt_reported,
+        "time_reported_str": time_reported_str,
+        "dt_committed": dt_committed,
+        "time_committed_str": time_committed_str
+    }
+
+    # Mapping of field names to user-friendly names
+    field_name_mapping = {
+        "det_narrative": "Case Narrative",
+        "dt_reported": "Date Reported",
+        "time_reported_str": "Time Reported",
+        "dt_committed": "Date Committed",
+        "time_committed_str": "Time Committed"
+    }
+
+    case_detail = ""
+
+    # Validate the data using Pydantic
+    try:
+        case_detail = Case_Detail_Validation(**data)
+        # Data is valid, proceed with database operations
+        return case_detail
+    except ValidationError as e:
+        for error in e.errors():
+            field = error['loc'][0]
+            message = error['msg']
+            user_friendly_field = field_name_mapping.get(field, field)
+            st.error(f"Error in {user_friendly_field}: {message}")
+    finally:
+        st.write(case_detail)

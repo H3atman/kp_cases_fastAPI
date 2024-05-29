@@ -3,7 +3,6 @@ import requests
 from pydantic import ValidationError
 from modules.dataValidation import VictimData_Validation
 
-
 @st.cache_data(ttl=1800)  # Cache data for 30 minutes
 def get_brgy_city_mun(mps_cps):
     # Make a GET request to the FastAPI endpoint
@@ -118,5 +117,7 @@ def addVictim(mps_cps):
             message = error['msg']
             user_friendly_field = field_name_mapping.get(field, field)
             st.error(f"Error in {user_friendly_field}: {message}")
+    finally:
+        st.write(victim_data)
 
-    st.write(victim_data)
+   

@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 
+
 # Cache data for 30 minutes
 @st.cache_data(ttl=1800)
 def get_offense():
@@ -40,6 +41,9 @@ def addOffense():
         "Select Offense :red[#]", generate_offense, index=None
     )
 
+    # Initialize classification
+    classification = None
+
     # Get the Incident Classification from cached data
     offClassification_placeholder = st.empty()
     if offenseType and offenseType != "Please select an Offense":
@@ -52,9 +56,12 @@ def addOffense():
 
     # Check if the Offense is not in the option
     check = st.checkbox("Tick the checkbox for Other Cases not found in Select Offense Dropdown above")
+    otherOffense = ""
     if check:
         offenseType_placeholder.empty()
         offClassification_placeholder.empty()
+        offenseType = None
+        classification = "Other Crimes"
         otherOffense = st.text_input(
             "Others, Please Specify :red[#]", help="Press Enter to confirm the Other KP Incident"
         )
@@ -70,4 +77,5 @@ def addOffense():
     )
     if case_status is None:
         st.error("Please select Case Status.")
+
     st.write("---")

@@ -9,6 +9,24 @@ from forms import offenses, victims, suspects, caseDetails
 # Define the FastAPI base URL
 API_URL = "http://127.0.0.1:8000"
 
+@st.cache_data(ttl="60m")
+def fetch_combined_value_and_id(api_url):
+    response = requests.get(f"{api_url}/temp-entries/")
+    if response.status_code == 200:
+        temp_entries = response.json()
+        if temp_entries:
+            latest_entry = temp_entries[-1]
+            combined_value = latest_entry['combined_value']
+            entry_id = latest_entry['id']
+        else:
+            combined_value = None
+            entry_id = None
+    else:
+        st.error("Failed to fetch the combined value")
+        combined_value = None
+        entry_id = None
+    return combined_value, entry_id
+
 def entryForm():
     # Set page configuration
     st.set_page_config(page_title="KP Cases Detailed Entry")
@@ -35,28 +53,14 @@ def entryForm():
         # If authenticated, store and retrieve username
         st.session_state['username'] = st.session_state["name"]
         
-        # Fetch the combined_value and its ID from the FastAPI backend
-        response = requests.get(f"{API_URL}/temp-entries/")
-        if response.status_code == 200:
-            temp_entries = response.json()
-            if temp_entries:
-                latest_entry = temp_entries[-1]
-                combined_value = latest_entry['combined_value']
-                entry_id = latest_entry['id']
-            else:
-                combined_value = None
-                entry_id = None
-        else:
-            st.error("Failed to fetch the combined value")
-            combined_value = None
-            entry_id = None
+        # Fetch the combined_value and its ID using the cached function
+        combined_value, entry_id = fetch_combined_value_and_id(API_URL)
         
         # Redirect to home page if combined_value is None
         if combined_value is None:
             st.warning("No combined value found. Redirecting to home page.")
             time.sleep(3)
             st.switch_page('app.py')
-
 
         if st.button("Home"):
             if entry_id is not None:

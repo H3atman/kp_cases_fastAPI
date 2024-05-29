@@ -1,5 +1,8 @@
 import streamlit as st
 import requests
+from pydantic import ValidationError
+from modules.dataValidation import VictimData_Validation
+
 
 @st.cache_data(ttl=1800)  # Cache data for 30 minutes
 def get_brgy_city_mun(mps_cps):
@@ -63,9 +66,57 @@ def addVictim(mps_cps):
 
 
     # Check if a Barangay was selected
+    vic_strName = ""
     if vic_brgy == None:
         st.warning("Please select a Barangay.")
     else:
-        vic_add_street = st.text_input("House No./Street Name",key="vic_strName")
+        vic_strName = st.text_input("House No./Street Name",key="vic_strName")
 
     st.write("---")
+
+    # Create a dictionary of the data
+    data = {
+        "vic_fname": vic_fname,
+        "vic_midname": vic_midname,
+        "vic_lname": vic_lname,
+        "vic_qlfr": vic_qlfr,
+        "vic_alias": vic_alias,
+        "vic_gndr": vic_gndr,
+        "vic_age": vic_age,
+        "vic_distprov": vic_distprov,
+        "vic_cityMun": vic_cityMun,
+        "vic_brgy": vic_brgy,
+        "vic_strName": vic_strName
+    }
+
+    # Mapping of field names to user-friendly names
+    field_name_mapping = {
+        "vic_fname": "Victim's First Name",
+        "vic_midname": "Victim's Middle Name",
+        "vic_lname": "Victim's Last Name",
+        "vic_qlfr": "Qualifier",
+        "vic_alias": "Alias",
+        "vic_gndr": "Gender",
+        "vic_age": "Age",
+        "vic_distprov": "District/Province",
+        "vic_cityMun": "City/Municipality",
+        "vic_brgy": "Barangay",
+        "vic_strName": "House No./Street Name"
+    }
+
+
+    # Validate the data using Pydantic
+    victim_data = ""
+    # Validate the data using Pydantic
+    try:
+        victim_data = VictimData_Validation(**data)
+        # Data is valid, proceed with database operations
+        return victim_data
+    except ValidationError as e:
+        for error in e.errors():
+            field = error['loc'][0]
+            message = error['msg']
+            user_friendly_field = field_name_mapping.get(field, field)
+            st.error(f"Error in {user_friendly_field}: {message}")
+
+    st.write(victim_data)

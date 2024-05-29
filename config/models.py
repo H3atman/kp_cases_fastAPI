@@ -37,3 +37,21 @@ class TempEntry(Base):
     id = Column(Integer, primary_key=True, index=True)
     combined_value = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Province_Brgy_Details(Base):
+    __tablename__ = 'regionxii_brgy'
+    __table_args__ = {'extend_existing': True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    province = Column(String)
+    mun_city = Column(String)
+    ppo_cpo = Column(String)
+    mps_cps = Column(String)
+    brgy = Column(String)
+
+class Offense(Base):
+    __tablename__ = 'offense_class'
+
+    id = Column(Integer, primary_key=True, index=True)
+    incidents = Column(String)
+    classification = Column(String)

@@ -3,6 +3,8 @@ from modules.auth_utils import fetch_users, prepare_credentials, initialize_auth
 from modules.newEntry_comp import newEntry  # Import custom component for new entries
 import requests
 import time
+from forms import offenses, victims, suspects, caseDetails
+# from forms.suspects import addSuspect
 
 # Define the FastAPI base URL
 API_URL = "http://127.0.0.1:8000"
@@ -70,9 +72,31 @@ def entryForm():
         mps_cps = user_info.get("mps_cps", "")
         ppo_cpo = user_info.get("ppo_cpo", "")
         
+        #====================================
         # Display entry form
+        #====================================
+        st.title('Katarungang Pambarangay Cases Detailed Report Encoding')
         st.text_input("Entry Number", value=combined_value, disabled=True)
-        st.write(f"You are now encoding the {mps_cps} which is part of {ppo_cpo}")
+
+        complainant, suspect, caseDetail, offense = st.tabs(["Complainant / Victim's Profile", "Suspect/s Profile", "Case Detail", "Offense"])
+
+        with complainant:
+            st.subheader("Victims's Profile")
+            victims.addVictim(mps_cps)
+
+
+        with suspect:
+            st.subheader("Suspect's Profile")
+            suspects.addSuspect(mps_cps)
+
+
+        with caseDetail:
+            st.subheader("Case Details")
+            caseDetails.case_Details()
+        
+        with offense:
+            st.subheader("Offense :red[#]")
+            offenses.addOffense()
 
     elif st.session_state["authentication_status"] is False:
         st.error('Username/password is incorrect')

@@ -1,5 +1,6 @@
-from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy import Boolean, Column, Integer, String, DateTime
 from config.database import Base
+from sqlalchemy.sql import func
 
 class UserBase(Base):
     __tablename__ = 'userbase'
@@ -29,3 +30,10 @@ class Barangay(Base):
     mps_cps = Column(String)
     ppo_cpo = Column(String)
     brgy = Column(String)
+
+class TempEntry(Base):
+    __tablename__ = 'temp_entries'
+
+    id = Column(Integer, primary_key=True, index=True)
+    combined_value = Column(String)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

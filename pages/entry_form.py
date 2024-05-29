@@ -1,17 +1,13 @@
 import streamlit as st
 from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator
 from modules.newEntry_comp import newEntry  # Import custom component for new entries
+import requests
+import time
 
-# Check if 'combined_value' is in the session state
-if "combined_value" not in st.session_state:
-    st.session_state.combined_value = None
+# Define the FastAPI base URL
+API_URL = "http://127.0.0.1:8000"
 
-if st.session_state.combined_value is None:
-    st.switch_page('app.py')
-else:
-    entryNumber = st.session_state.combined_value
-
-def entryForm(entryNumber):
+def entryForm():
     # Set page configuration
     st.set_page_config(page_title="KP Cases Detailed Entry")
 
@@ -31,23 +27,52 @@ def entryForm(entryNumber):
 
     # Initialize the authenticator
     authenticator = initialize_authenticator(credentials)
-
-
     authenticator.login(fields={'Form name': 'PRO 12 KP Cases Details Encoding User\'s Login'})
 
     if st.session_state["authentication_status"]:
         # If authenticated, store and retrieve username
         st.session_state['username'] = st.session_state["name"]
-        if st.button("Home"):
+        
+        # Fetch the combined_value and its ID from the FastAPI backend
+        response = requests.get(f"{API_URL}/temp-entries/")
+        if response.status_code == 200:
+            temp_entries = response.json()
+            if temp_entries:
+                latest_entry = temp_entries[-1]
+                combined_value = latest_entry['combined_value']
+                entry_id = latest_entry['id']
+            else:
+                combined_value = None
+                entry_id = None
+        else:
+            st.error("Failed to fetch the combined value")
+            combined_value = None
+            entry_id = None
+        
+        # Redirect to home page if combined_value is None
+        if combined_value is None:
+            st.warning("No combined value found. Redirecting to home page.")
+            time.sleep(3)
             st.switch_page('app.py')
+
+
+        if st.button("Home"):
+            if entry_id is not None:
+                response = requests.delete(f"{API_URL}/temp-entries/{entry_id}")
+                if response.status_code == 200:
+                    st.success("Successfully deleted the entry")
+                else:
+                    st.error("Failed to delete the entry")
+            st.switch_page('app.py')
+
         username = st.session_state['username']
         user_info = credentials["usernames"].get(username, {})
         mps_cps = user_info.get("mps_cps", "")
         ppo_cpo = user_info.get("ppo_cpo", "")
+        
         # Display entry form
-        st.text_input("Entry Number", value=entryNumber, disabled=True)
+        st.text_input("Entry Number", value=combined_value, disabled=True)
         st.write(f"You are now encoding the {mps_cps} which is part of {ppo_cpo}")
-
 
     elif st.session_state["authentication_status"] is False:
         st.error('Username/password is incorrect')
@@ -55,5 +80,5 @@ def entryForm(entryNumber):
     elif st.session_state["authentication_status"] is None:
         st.warning('Please enter your username and password')
 
-# Call the entryForm function with default values
-entryForm(entryNumber)
+# Call the entryForm function
+entryForm()

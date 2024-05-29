@@ -69,9 +69,14 @@ def newEntry(mps_cps):
     # Store the combined_value in the session state
     st.session_state.combined_value = combined_value
 
-    if st.button("New Entry",type="primary",use_container_width=True):
-        print(st.session_state.combined_value)
-        st.switch_page("pages/entry_form.py")
+    if st.button("New Entry", type="primary", use_container_width=True):
+        response = requests.post(f"http://127.0.0.1:8000/temp-entries/", json={"combined_value": st.session_state.combined_value})
+        if response.status_code == 200:
+            st.session_state.temp_entry_id = response.json()["id"]
+            print(st.session_state.combined_value)
+            st.switch_page("pages/entry_form.py")
+        else:
+            st.error("Failed to store the entry")
 
     return combined_value
     

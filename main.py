@@ -45,6 +45,17 @@ class StationSequence(BaseModel):
     class Config:
         orm_mode = True
 
+# Pydantic model for TempEntry
+class TempEntryCreate(BaseModel):
+    combined_value: str
+
+class TempEntryResponse(BaseModel):
+    id: int
+    combined_value: str
+
+    class Config:
+        orm_mode = True
+
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
@@ -89,3 +100,29 @@ def read_station_by_mps_cps(mps_cps: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Station sequence not found")
 
     return station_sequence
+
+
+
+# Endpoint to store a new temp entry
+@app.post("/temp-entries/", response_model=TempEntryResponse)
+def create_temp_entry(entry: TempEntryCreate, db: Session = Depends(get_db)):
+    db_entry = models.TempEntry(combined_value=entry.combined_value)
+    db.add(db_entry)
+    db.commit()
+    db.refresh(db_entry)
+    return db_entry
+
+# Endpoint to delete a temp entry
+@app.delete("/temp-entries/{entry_id}", response_model=TempEntryResponse)
+def delete_temp_entry(entry_id: int, db: Session = Depends(get_db)):
+    db_entry = db.query(models.TempEntry).filter(models.TempEntry.id == entry_id).first()
+    if db_entry is None:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    db.delete(db_entry)
+    db.commit()
+    return db_entry
+
+# Endpoint to get all temp entries (optional, for debugging)
+@app.get("/temp-entries/", response_model=List[TempEntryResponse])
+def get_temp_entries(db: Session = Depends(get_db)):
+    return db.query(models.TempEntry).all()

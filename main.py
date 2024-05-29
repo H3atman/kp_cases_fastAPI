@@ -3,13 +3,28 @@ from pydantic import BaseModel
 from typing import Annotated
 from uuid import UUID, uuid4
 import bcrypt
+from typing import List
 import config.models as models
 from config.database import engine, SessionLocal
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+db_dependency = Annotated[Session, Depends(get_db)]
+
+
+# ============================================
+# Pydantic Classes
+# ============================================
 class UserBaseModel(BaseModel):
     id: UUID
     username: str
@@ -21,15 +36,14 @@ class UserLoginModel(BaseModel):
     username: str
     password: str
 
+# Pydantic schema for Station_Sequence model
+class StationSequence(BaseModel):
+    seq: str
+    mps_cps: str
+    ppo_cpo: str
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-db_dependency = Annotated[Session, Depends(get_db)]
+    class Config:
+        orm_mode = True
 
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
@@ -65,3 +79,13 @@ async def login(user: UserLoginModel, db: db_dependency):
     
     return {"message": "Login successful", "user": db_user}
 
+
+# Endpoint to fetch `seq` by `mps_cps`
+@app.get("/stations/{mps_cps}", response_model=List[StationSequence])
+def read_station_by_mps_cps(mps_cps: str, db: Session = Depends(get_db)):
+    station_sequence = db.execute(select(models.Station_Sequence).where(models.Station_Sequence.mps_cps == mps_cps)).scalars().all()
+    
+    if not station_sequence:
+        raise HTTPException(status_code=404, detail="Station sequence not found")
+
+    return station_sequence

@@ -1,79 +1,56 @@
 import streamlit as st
-import streamlit_authenticator as stauth
-import requests
-from fastapi import HTTPException
+from modules.newEntry_comp import newEntry  # Import custom component for new entries
+from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator  # Import authentication utilities
 
-st.set_page_config("KP Cases Detailed Entry")
+# Set page configuration
+st.set_page_config(page_title="KP Cases Detailed Entry")
 
-css = '''
+# Hide the sidebar with custom CSS
+hide_sidebar_css = '''
 <style>
     [data-testid="stSidebar"] {
         display: none;
     }
 </style>
 '''
-st.markdown(css, unsafe_allow_html=True)
+st.markdown(hide_sidebar_css, unsafe_allow_html=True)
 
-# Function to fetch users from FastAPI
-@st.cache_data(ttl="60m")
-def fetch_users():
-    response = requests.get("http://128.199.65.164:8080/users/")
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail="Failed to fetch users")
-    return response.json()
-
-# Fetch users from FastAPI
+# Fetch users from FastAPI and prepare credentials
 users_data = fetch_users()
+credentials = prepare_credentials(users_data)
 
-# Prepare data for streamlit-authenticator
-credentials = {
-    "usernames": {
-        user['username']: {
-            "name": user['username'],
-            "password": user['password'],
-            "mps_cps": user.get('mps_cps', ''),  # Include mps_cps, defaulting to an empty string if not present
-            "ppo_cpo": user.get('ppo_cpo', '')   # Include ppo_cpo, defaulting to an empty string if not present
-        }
-        for user in users_data
-    }
-}
+# Initialize the authenticator
+authenticator = initialize_authenticator(credentials)
 
-# Initialize authenticator
-authenticator = stauth.Authenticate(
-    credentials,
-    "my_app",
-    "auth_cookie_name",
-    cookie_expiry_days=30
-)
+authenticator.login(fields={'Form name': 'PRO 12 KP Cases Details Encoding User\'s Login'})
 
-# Check if user is authenticated
-if 'authentication_status' not in st.session_state:
-    st.session_state['authentication_status'] = None
-
-if st.session_state['authentication_status'] is None:
-    with st.container():
-        # Login widget
-        authenticator.login(fields={'Form name':'PRO 12 KP Cases Details Encoding User\'s Login'})
-
-    if st.session_state["authentication_status"]:
-        st.session_state['username'] = st.session_state["name"]  # Store username in session state
-        authenticator.logout()  # Logout after storing username
-        username = st.session_state['username']  # Retrieve username from session state
-        user_info = credentials["usernames"].get(username, {})
-        mps_cps = user_info.get("mps_cps", "")
-        ppo_cpo = user_info.get("ppo_cpo", "")
-        st.title(f'Welcome *{mps_cps}*, *{ppo_cpo}*')
-
-
-    elif st.session_state["authentication_status"] is False:
-        st.error('Username/password is incorrect')
-    elif st.session_state["authentication_status"] is None:
-        st.warning('Please enter your username and password')
-
-else:
-    authenticator.logout("Logout", "main")
-    username = st.session_state["username"]  # Retrieve username from session state
+if st.session_state["authentication_status"]:
+    # If authenticated, store and retrieve username
+    st.session_state['username'] = st.session_state["name"]
+    authenticator.logout()  # Provide logout functionality
+    username = st.session_state['username']
     user_info = credentials["usernames"].get(username, {})
     mps_cps = user_info.get("mps_cps", "")
     ppo_cpo = user_info.get("ppo_cpo", "")
-    st.title(f'Welcome *{ppo_cpo}*, *{mps_cps}*')
+    st.title(f'Welcome *{mps_cps}*, *{ppo_cpo}*')
+
+    # Create tabs for navigation
+    tab1, tab2, tab3 = st.tabs(["New Entry", "Encoded Data", "Change Password"])
+    
+    with tab1:
+        st.subheader("New Entry")
+        entryCode = newEntry(mps_cps)
+
+    with tab2:
+        st.subheader("Show Encoded Data")
+
+    with tab3:
+        st.subheader("You can change your password here")
+
+elif st.session_state["authentication_status"] is False:
+    st.error('Username/password is incorrect')
+
+elif st.session_state["authentication_status"] is None:
+    st.warning('Please enter your username and password')
+
+

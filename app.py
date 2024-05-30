@@ -35,7 +35,7 @@ if st.session_state["authentication_status"]:
     st.title(f'Welcome *{mps_cps}*, *{ppo_cpo}*')
 
     # Create tabs for navigation
-    tab1, tab2, tab3 = st.tabs(["New Entry", "Encoded Data", "Change Password"])
+    tab1, tab2, tab3, tab4 = st.tabs(["New Entry", "Encoded Data", "Search and Edit Entry" ,"Change Password"])
     
     with tab1:
         st.subheader("New Entry")
@@ -45,6 +45,9 @@ if st.session_state["authentication_status"]:
         st.subheader("Show Encoded Data")
 
     with tab3:
+        st.subheader("You can edit you entries here")
+
+    with tab4:
         st.subheader("You can change your password here")
 
 elif st.session_state["authentication_status"] is False:

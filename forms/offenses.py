@@ -36,38 +36,49 @@ def addOffense():
     # Initialize Offense Values
     generate_offense = get_offense()
 
+
+
     offenseType_placeholder = st.empty()
-    offenseType = offenseType_placeholder.selectbox(
-        "Select Offense :red[#]", generate_offense, index=None
-    )
+    offenseType = offenseType_placeholder.selectbox("Select Offense :red[#]", generate_offense, index=None)
+    warning = st.empty()
+    if offenseType is None:
+        warning.warning("Please select an Offense")
 
     # Initialize classification
-    classification = None
+    # classification = None
 
     # Get the Incident Classification from cached data
-    offClassification_placeholder = st.empty()
-    if offenseType and offenseType != "Please select an Offense":
-        classification = get_offense_classification(offenseType)
-        offClassification_placeholder.text_input(
-            "Offense Classification", classification, disabled=True
-        )
+    offense_classification_placeholder = st.empty()
+    if offenseType is None:
+        offense_classification = offense_classification_placeholder.text_input("Offense Classification",value=None, disabled=True)
     else:
-        offClassification_placeholder.warning("Please Select Offense")
+        classification = get_offense_classification(offenseType)
+        offense_classification = offense_classification_placeholder.text_input("Offense Classification", classification, disabled=True)
+
 
     # Check if the Offense is not in the option
     check = st.checkbox("Tick the checkbox for Other Cases not found in Select Offense Dropdown above")
-    otherOffense = ""
-    if check:
-        offenseType_placeholder.empty()
-        offClassification_placeholder.empty()
-        offenseType = None
-        classification = "Other Crimes"
-        otherOffense = st.text_input(
-            "Others, Please Specify :red[#]", help="Press Enter to confirm the Other KP Incident"
-        )
 
-        if not otherOffense:
+    if not check:
+        offense = offenseType
+        offense_class = offense_classification
+        otherOffense = None
+    else:
+        offenseType_placeholder.selectbox("Select Offense :red[#]", generate_offense, index=None,disabled=True, key="test")
+        warning.empty()
+        offense_classification_placeholder.text_input("Offense Classification",value=None, disabled=True, key="test2")
+        offense = None
+        offense_class = "Other Crimes"
+    
+    otherOffense_placeholder = st.empty()
+    otherOffense = otherOffense_placeholder.text_input("Others, Please Specify :red[#]", value=None, help="Press Enter to confirm the Other KP Incident",disabled=True)
+    if check:
+        if otherOffense is None:
+            otherOffense= otherOffense_placeholder.text_input("Others, Please Specify :red[#]", help="Press Enter to confirm the Other KP Incident",key="test3")
+        else:
+            otherOffense = otherOffense_placeholder.text_input("Others, Please Specify :red[#]", help="Press Enter to confirm the Other KP Incident",disabled=True,key="test4")
             st.warning("Please Type the Other Offense")
+
 
     st.subheader("Case Status")
     case_status = st.selectbox(
@@ -79,3 +90,4 @@ def addOffense():
         st.error("Please select Case Status.")
 
     st.write("---")
+    st.code(f"OffenseType: {offense}, Offense Classification: {offense_class}, Other Offense: {otherOffense}, Case Status: {case_status}, {check}")

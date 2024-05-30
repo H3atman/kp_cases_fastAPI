@@ -4,6 +4,8 @@ from modules.newEntry_comp import newEntry  # Import custom component for new en
 import requests
 import time
 from forms import offenses, victims, suspects, caseDetails
+from modules.dataValidation import Entry_Number_Validation
+from pydantic import ValidationError
 # from forms.suspects import addSuspect
 
 # Define the FastAPI base URL
@@ -86,21 +88,23 @@ def entryForm():
 
         with complainant:
             st.subheader("Victims's Profile")
-            victims.addVictim(mps_cps)
+            victim_data = victims.addVictim(mps_cps)
 
 
         with suspect:
             st.subheader("Suspect's Profile")
-            suspects.addSuspect(mps_cps)
+            suspect_data = suspects.addSuspect(mps_cps)
 
 
         with caseDetail:
             st.subheader("Case Details")
-            caseDetails.case_Details()
+            case_detail = caseDetails.case_Details()
         
         with offense:
             st.subheader("Offense :red[#]")
-            offenses.addOffense()
+            offense_detail = offenses.addOffense()
+
+        st.text_area("Testing return Value", value=f'{victim_data} -- {suspect_data} -- {case_detail} -- {offense_detail}')
 
     elif st.session_state["authentication_status"] is False:
         st.error('Username/password is incorrect')
@@ -108,5 +112,22 @@ def entryForm():
     elif st.session_state["authentication_status"] is None:
         st.warning('Please enter your username and password')
 
+
+    data = {
+        "entry_number": combined_value,
+    }
+
+    # Validate the data using Pydantic
+    combined_value_data = ""
+    try:
+        combined_value_data = Entry_Number_Validation(**data)
+        # Data is valid, proceed with database operations
+        return combined_value_data
+    except ValidationError as e:
+        st.error(e)
+    finally:
+        st.write(combined_value_data)
+
 # Call the entryForm function
+
 entryForm()

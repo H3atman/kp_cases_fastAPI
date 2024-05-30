@@ -94,6 +94,8 @@ class Offense_Values_ResponseModel(BaseModel):
 
 
 
+
+
 # ============================================
 # END of Pydantic Classes
 # ============================================
@@ -228,3 +230,5 @@ async def get_offense_classification(offense: str, db: Session = Depends(get_db)
     if offense is None:
         raise HTTPException(status_code=404, detail="Offense classification not found")
     return Offense_Classification(id=offense.id, classification=offense.classification)
+
+

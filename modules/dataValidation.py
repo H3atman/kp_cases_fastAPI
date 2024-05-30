@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator, model_validator, ValidationError
-from typing import Optional
+from typing import Optional, Any
 from datetime import date, time
 
 class VictimData_Validation(BaseModel):
@@ -77,15 +77,39 @@ class SuspectData_Validation(BaseModel):
         return value
     
 
+# Pydantic model for case details validation
 class Case_Detail_Validation(BaseModel):
-    det_narrative: Optional[str] = Field(..., description="Narrative description of the case")
+    det_narrative: Optional[str] = Field(None, description="Narrative description of the case")
     dt_reported: date = Field(..., description="Date Reported")
-    time_reported: Optional[time] = Field(None, description="Time Reported")
-    dt_committed: Optional[date] = Field(..., description="Date Committed")
-    time_committed: Optional[time] = Field(None, description="Time Committed")
+    time_reported: Optional[time]
+    dt_committed: Optional[date]
+    time_committed: Optional[time]
 
     @field_validator('dt_reported')
     def check_dt_reported(cls, value):
         if value == date.today():
             raise ValueError("Please change the Date Reported")
         return value
+    
+
+class Offense_Validation(BaseModel):
+    offense: Optional[str] = None
+    offense_class: str
+    otherOffense: Optional[str] = None
+    case_status: str = None
+    check: bool
+
+    @field_validator('offense','otherOffense')
+    def check_names(cls, value):
+        if not value:
+            return None
+        return value
+    
+    @field_validator('case_status')
+    def check_dt_reported(cls, value):
+        if not value:
+            raise ValueError("Please Select a Case Status")
+        return value
+    
+class Entry_Number_Validation(BaseModel):
+    entryNumber: str  = Field(..., alias="entry_number")

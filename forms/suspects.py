@@ -103,3 +103,6 @@ def addSuspect(mps_cps):
             st.error(f"Error in {user_friendly_field}: {message}")
     finally:
         st.write(suspect_data)
+
+
+    return suspect_data

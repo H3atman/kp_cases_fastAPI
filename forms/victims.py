@@ -120,4 +120,7 @@ def addVictim(mps_cps):
     finally:
         st.write(victim_data)
 
+
+    return victim_data
+
    

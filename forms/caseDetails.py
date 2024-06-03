@@ -45,7 +45,7 @@ def case_Details():
         dt_committed = st.date_input(
             "Date Committed",
             help="If di po available sa data ang exact date reported paki pili nalang po ang 1st day of the month",
-            format="YYYY/MM/DD"
+            format="YYYY/MM/DD",value=None
         )
         
         col1, col2 = st.columns(2)

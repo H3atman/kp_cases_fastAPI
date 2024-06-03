@@ -1,13 +1,13 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
-from typing import Annotated
+from typing import Annotated,  List, Optional
 from uuid import UUID, uuid4
 import bcrypt
-from typing import List, Optional
 import config.models as models
 from config.database import engine, SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+from datetime import date, time
 
 app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
@@ -81,7 +81,21 @@ class Offense_Classification(BaseModel):
 
 
 
+class CaseDetailsModel(BaseModel):
+    entry_number: str
+    offense: str
+    offense_class: str
+    case_status: str
+    check: bool
 
+    narrative: str
+    date_reported: date
+    time_reported: time
+    date_committed: date
+    time_committed: time
+
+    class Config:
+        from_attributes = True
 
 
 
@@ -215,5 +229,28 @@ async def get_offense_classifications(db: Session = Depends(get_db)):
     return [{"incidents": offense.incidents, "classification": offense.classification} for offense in offenses]
 
 
+@app.post("/case-details/")
+async def create_case_details(case_details: CaseDetailsModel, db: Session = Depends(get_db)):
+    # Validate the data here if necessary
 
+    # Create a new database object
+    db_case_details = models.CaseDetails(
+        id = str(uuid4()),
+        entry_number=case_details.entry_number,
+        offense=case_details.offense,
+        offense_class=case_details.offense_class,
+        case_status=case_details.case_status,
+        check=case_details.check,
+        narrative=case_details.narrative,
+        date_reported=case_details.date_reported,
+        time_reported =case_details.time_reported,
+        date_committed =case_details.date_committed,
+        time_committed =case_details.time_committed
+    )
 
+    # Add it to the database
+    db.add(db_case_details)
+    db.commit()
+    db.refresh(db_case_details)
+
+    return db_case_details

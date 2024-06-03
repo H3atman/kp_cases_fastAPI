@@ -4,9 +4,20 @@ import requests
 import time
 from forms import offenses, victims, suspects, caseDetails
 from modules.dataValidation import Entry_Number_Validation
+from modules.newEntry_functions import *
 from pydantic import ValidationError
 
 
+def process_offense(offense, offense_class, otherOffense, case_status, check):
+    if offense is None:
+        offense = otherOffense
+
+    return {
+        "offense": offense,
+        "offense_class": offense_class,
+        "case_status": case_status,
+        "check": check
+    }
 
 # Define the FastAPI base URL
 API_URL = "http://127.0.0.1:8000"
@@ -106,6 +117,8 @@ def entryForm():
             offense_detail = offenses.addOffense()
 
 
+
+
     elif st.session_state["authentication_status"] is False:
         st.error('Username/password is incorrect')
         
@@ -113,21 +126,11 @@ def entryForm():
         st.warning('Please enter your username and password')
 
 
-    data = {
-        "entry_number": combined_value,
-    }
+    validate_and_input_data_to_database(combined_value, case_detail, offense_detail, API_URL)
 
-    # Validate the data using Pydantic
-    combined_value_data = ""
-    try:
-        combined_value_data = Entry_Number_Validation(**data)
-        # Data is valid, proceed with database operations
-        return combined_value_data
-    except ValidationError as e:
-        st.error(e)
-    finally:
-        st.write(combined_value_data)
 
 
 # Call the entryForm function
 entryForm()
+
+

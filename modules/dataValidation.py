@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, field_validator, model_validator, ValidationError
-from typing import Optional, Any
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional
 from datetime import date, time
 
 class VictimData_Validation(BaseModel):
@@ -95,11 +95,10 @@ class Case_Detail_Validation(BaseModel):
 class Offense_Validation(BaseModel):
     offense: Optional[str] = None
     offense_class: str
-    otherOffense: Optional[str] = None
     case_status: str = None
     check: bool
 
-    @field_validator('offense','otherOffense')
+    @field_validator('offense')
     def check_names(cls, value):
         if not value:
             return None
@@ -113,3 +112,18 @@ class Offense_Validation(BaseModel):
     
 class Entry_Number_Validation(BaseModel):
     entryNumber: str  = Field(..., alias="entry_number")
+
+
+
+# ==============================================
+class New_Entry_CaseDetails_Validation(BaseModel):
+    det_narrative: Optional[str] = Field(None, description="Narrative description of the case")
+    dt_reported: date = Field(..., description="Date Reported")
+    time_reported: Optional[time]
+    dt_committed: Optional[date]
+    time_committed: Optional[time]
+
+    offense: str
+    offense_class: str
+    case_status: str
+    check: bool

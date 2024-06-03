@@ -1,6 +1,10 @@
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, Text, Date, Time
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, Text, Date, Time, ForeignKey
+from sqlalchemy.orm import relationship
 from config.database import Base
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.declarative import declarative_base
+import uuid
 
 class UserBase(Base):
     __tablename__ = 'userbase'
@@ -57,29 +61,22 @@ class Offense(Base):
     classification = Column(String)
 
 
-class Incidents_New_Entry(Base):
-    __tablename__ = 'crime_incidents'
 
-    id = Column(Integer, primary_key=True, index=True)
-    entry_number = Column(String)
-    date_encoded = Column(DateTime(timezone=False), server_default=func.now())
-    pro = Column(String)
-    ppo = Column(String)
-    station = Column(String)
-    province = Column(String)
-    city = Column(String)
-    barangay = Column(String)
-    street = Column(String)
+# =====================================================
+
+class CaseDetails(Base):
+    __tablename__ = 'case_details'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entry_number = Column(String, index=True)
+    offense = Column(String)
+    offense_class = Column(String)
+    case_status = Column(String)
+    check = Column(Boolean)
+
+
+    narrative = Column(String)
     date_reported = Column(Date)
     time_reported = Column(Time)
-    date_commited = Column(Date)
-    time_commited = Column(Time)
-    offense = Column(String)
-    offense_classification = Column(String)
-    victim_name_age_sex = Column(String)
-    victim_local_address = Column(String)
-    suspect_name_age_sex = Column(String)
-    suspect_local_address = Column(String)
-    narrative = Column(Text)
-    case_status = Column(String)
-
+    date_committed = Column(Date)
+    time_committed = Column(Time)

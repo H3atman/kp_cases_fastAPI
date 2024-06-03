@@ -81,14 +81,17 @@ def addOffense():
     if case_status is None:
         st.error("Please select Case Status.")
 
+    if offense is None:
+        offense = otherOffense
+
     # Create a directory of data
     data = {
         "offense": offense,
         "offense_class": offense_class,
-        "otherOffense": otherOffense,
         "case_status": case_status,
         "check": check
     }
+
 
     # Mapping of field names to user-friendly names
     field_name_mapping = {

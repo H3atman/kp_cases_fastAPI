@@ -3,7 +3,7 @@ from modules.newEntry_comp import newEntry  # Import custom component for new en
 from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator  # Import authentication utilities
 
 # Set page configuration
-st.set_page_config(page_title="KP Cases Detailed Entry")
+st.set_page_config(page_title="KP Cases Dashboard")
 
 # Hide the sidebar with custom CSS
 hide_sidebar_css = '''

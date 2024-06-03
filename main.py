@@ -74,23 +74,13 @@ class Province_City_Mun_Value_ResponseModel(BaseModel):
     province_value: Optional[Province_Value]
 
 
-class Offense_Values(BaseModel):
-    id: int
-    incidents: str
-
-    class Config:
-        from_attributes = True
-
 class Offense_Classification(BaseModel):
     id: int
+    incidents: str
     classification: str
 
-    class Config:
-        from_attributes = True
 
-class Offense_Values_ResponseModel(BaseModel):
-    incidents_values: List[Offense_Values]
-    classification_values: Optional[Offense_Classification]
+
 
 
 
@@ -217,18 +207,13 @@ async def get_brgy_city_mun(mps_cps: str, db: db_dependency):
         "province_value": province_value
     }
 
-# Endpoint to get offense values
-@app.get("/offense_values", response_model=List[Offense_Values])
-async def get_offense_values(db: Session = Depends(get_db)):
-    offenses = db.query(models.Offense).all()
-    return [Offense_Values(id=offense.id, incidents=offense.incidents) for offense in offenses]
 
-# Endpoint to get offense classification
-@app.get("/offense_classification/{offense}", response_model=Offense_Classification)
-async def get_offense_classification(offense: str, db: Session = Depends(get_db)):
-    offense = db.query(models.Offense).filter(models.Offense.incidents == offense).first()
-    if offense is None:
-        raise HTTPException(status_code=404, detail="Offense classification not found")
-    return Offense_Classification(id=offense.id, classification=offense.classification)
+# Endpoint to get offense classifications
+@app.get("/offense_classifications")
+async def get_offense_classifications(db: Session = Depends(get_db)):
+    offenses = db.query(models.Offense).all()
+    return [{"incidents": offense.incidents, "classification": offense.classification} for offense in offenses]
+
+
 
 

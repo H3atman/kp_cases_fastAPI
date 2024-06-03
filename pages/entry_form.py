@@ -1,12 +1,12 @@
 import streamlit as st
 from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator
-from modules.newEntry_comp import newEntry  # Import custom component for new entries
 import requests
 import time
 from forms import offenses, victims, suspects, caseDetails
 from modules.dataValidation import Entry_Number_Validation
 from pydantic import ValidationError
-# from forms.suspects import addSuspect
+
+
 
 # Define the FastAPI base URL
 API_URL = "http://127.0.0.1:8000"
@@ -30,6 +30,7 @@ def fetch_combined_value_and_id(api_url):
     return combined_value, entry_id
 
 def entryForm():
+
     # Set page configuration
     st.set_page_config(page_title="KP Cases Detailed Entry")
 
@@ -104,7 +105,6 @@ def entryForm():
             st.subheader("Offense :red[#]")
             offense_detail = offenses.addOffense()
 
-        st.text_area("Testing return Value", value=f'{victim_data} -- {suspect_data} -- {case_detail} -- {offense_detail}')
 
     elif st.session_state["authentication_status"] is False:
         st.error('Username/password is incorrect')
@@ -128,6 +128,6 @@ def entryForm():
     finally:
         st.write(combined_value_data)
 
-# Call the entryForm function
 
+# Call the entryForm function
 entryForm()

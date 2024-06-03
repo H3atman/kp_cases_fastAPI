@@ -85,6 +85,7 @@ class Victim_Details(Base):
     __tablename__ = 'victim_details'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entry_number = Column(String, index=True)
     vic_fname= Column(String)
     vic_midname= Column(String)
     vic_lname= Column(String)
@@ -94,5 +95,23 @@ class Victim_Details(Base):
     vic_age= Column(Integer)
     vic_distprov= Column(String)
     vic_cityMun= Column(String)
-    vic_cityMun= Column(String)
+    vic_brgy= Column(String)
     vic_strName= Column(String)
+
+
+class Suspect_Details(Base):
+    __tablename__ = 'suspect_details'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entry_number = Column(String, index=True)
+    sus_fname= Column(String)
+    sus_midname= Column(String)
+    sus_lname= Column(String)
+    sus_qlfr= Column(String)
+    sus_alias= Column(String)
+    sus_gndr= Column(String)
+    sus_age= Column(Integer)
+    sus_distprov= Column(String)
+    sus_cityMun= Column(String)
+    sus_brgy= Column(String)
+    sus_strName= Column(String)

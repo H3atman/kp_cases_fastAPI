@@ -230,6 +230,8 @@ async def get_offense_classifications(db: Session = Depends(get_db)):
     return [{"incidents": offense.incidents, "classification": offense.classification} for offense in offenses]
 
 
+
+
 @app.post("/case-details/")
 async def create_case_details(case_details: CaseDetailsModel, db: Session = Depends(get_db)):
     # Create a new database object
@@ -255,9 +257,18 @@ async def create_case_details(case_details: CaseDetailsModel, db: Session = Depe
 
 
 @app.post("/victim-new-entry/", response_model=dv.VictimData_Validation)
-async def create_victim(victim: dv.VictimData_Validation, db: Session = Depends(get_db)):
+async def enter_victim(victim: dv.VictimData_Validation, db: Session = Depends(get_db)):
     db_victim = models.Victim_Details(**victim.model_dump())
     db.add(db_victim)
     db.commit()
     db.refresh(db_victim)
     return db_victim
+
+
+@app.post("/suspect-new-entry/", response_model=dv.SuspectData_Validation)
+async def enter_victim(suspect: dv.SuspectData_Validation, db: Session = Depends(get_db)):
+    db_suspect = models.Suspect_Details(**suspect.model_dump())
+    db.add(db_suspect)
+    db.commit()
+    db.refresh(db_suspect)
+    return db_suspect

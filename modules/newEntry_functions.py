@@ -1,9 +1,10 @@
 import requests
-from config.models import CaseDetails
+from config.models import CaseDetails, Victim_Details, Suspect_Details
 import streamlit as st
 from datetime import date, time
+# import json
 
-def validate_and_input_data_to_database(combined_value, case_detail, offense_detail, api_url):
+def dataEntry_caseDetails(entry_number, case_detail, offense_detail, api_url):
     # Convert date and time objects to strings
     def serialize_datetime(obj):
         if isinstance(obj, date):
@@ -18,7 +19,7 @@ def validate_and_input_data_to_database(combined_value, case_detail, offense_det
 
     # Create the data dictionary
     data = {
-        "entry_number": combined_value,
+        "entry_number": entry_number,
         "offense": offense_detail.offense,
         "offense_class": offense_detail.offense_class,
         "case_status": offense_detail.case_status,
@@ -39,19 +40,83 @@ def validate_and_input_data_to_database(combined_value, case_detail, offense_det
     db_case_details = CaseDetails(**data)
 
     # Proceed with database operations
-    if st.button("Submit Data", use_container_width=True, type="primary"):
-        case_detail_data = db_case_details.__dict__
-        case_detail_data.pop("_sa_instance_state", None)  # Remove the non-serializable attribute
+    case_detail_data = db_case_details.__dict__
+    case_detail_data.pop("_sa_instance_state", None)  # Remove the non-serializable attribute
 
-        # Convert case_detail_data to a JSON serializable form, excluding None values
-        serializable_case_detail_data = {
-            key: serialize_datetime(value) if isinstance(value, (date, time)) else value
-            for key, value in case_detail_data.items() if value is not None
-        }
+    # Convert case_detail_data to a JSON serializable form, excluding None values
+    serializable_case_detail_data = {
+        key: serialize_datetime(value) if isinstance(value, (date, time)) else value
+        for key, value in case_detail_data.items() if value is not None
+    }
 
-        response = requests.post(f"{api_url}/case-details/", json=serializable_case_detail_data)
+    response = requests.post(f"{api_url}/case-details/", json=serializable_case_detail_data)
 
-        if response.status_code == 200:
-            print("Data successfully input to the database.")
-        else:
-            print("Failed to input data to the database.")
+    if response.status_code == 200:
+        print("Data successfully input to the database.")
+    else:
+        print("Failed to input data to the database.")
+
+
+
+
+
+def dataEntry_victimDetails(entry_number, victim_data, api_url):
+    # Ensure victim_data is a dictionary
+    if isinstance(victim_data, str):
+        # Handle the case where victim_data is a string, perhaps from JSON
+        import json
+        try:
+            victim_data = json.loads(victim_data)
+        except json.JSONDecodeError:
+            print("Invalid victim_data format. Expected a JSON string.")
+            return
+    elif not isinstance(victim_data, dict):
+        print("Invalid victim_data format. Expected a dictionary.")
+        return
+
+    # Add entry_number to victim_data
+    victim_data['entry_number'] = entry_number
+
+    # Filter out None values
+    victim_data = {k: v for k, v in victim_data.items() if v is not None}
+
+    # Send the data as a JSON payload to the API
+    response = requests.post(f"{api_url}/victim-new-entry/", json=victim_data)
+
+    if response.status_code == 200:
+        print("Data successfully input to the database.")
+    else:
+        print("Failed to input data to the database.")
+
+
+
+
+
+def dataEntry_suspectDetails(entry_number, suspect_data, api_url):
+    # Ensure suspect_data is a dictionary
+    if isinstance(suspect_data, str):
+        # Handle the case where suspect_data is a string, perhaps from JSON
+        import json
+        try:
+            suspect_data = json.loads(suspect_data)
+        except json.JSONDecodeError:
+            print("Invalid suspect_data format. Expected a JSON string.")
+            return
+    elif not isinstance(suspect_data, dict):
+        print("Invalid suspect_data format. Expected a dictionary.")
+        return
+
+    # Add entry_number to suspect_data
+    suspect_data['entry_number'] = entry_number
+
+    # Filter out None values
+    suspect_data = {k: v for k, v in suspect_data.items() if v is not None}
+
+    # Send the data as a JSON payload to the API
+    response = requests.post(f"{api_url}/suspect-new-entry/", json=suspect_data)
+
+    if response.status_code == 200:
+        print("Data successfully input to the database.")
+    else:
+        print("Failed to input data to the database.")
+

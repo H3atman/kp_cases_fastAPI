@@ -119,8 +119,7 @@ def addVictim(mps_cps):
             st.error(f"Error in {user_friendly_field}: {message}")
     finally:
         st.write(victim_data)
-
-
-    return victim_data
+        if victim_data:
+            return dict(victim_data)
 
    

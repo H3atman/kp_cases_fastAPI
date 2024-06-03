@@ -6,6 +6,8 @@ from forms import offenses, victims, suspects, caseDetails
 from modules.dataValidation import Entry_Number_Validation
 from modules.newEntry_functions import *
 from pydantic import ValidationError
+import concurrent.futures
+
 
 
 def process_offense(offense, offense_class, otherOffense, case_status, check):
@@ -39,6 +41,14 @@ def fetch_combined_value_and_id(api_url):
         combined_value = None
         entry_id = None
     return combined_value, entry_id
+
+
+
+# Define a function to show error messages for incomplete data
+def show_error(message):
+    st.error(message)
+
+
 
 def entryForm():
 
@@ -117,6 +127,38 @@ def entryForm():
             offense_detail = offenses.addOffense()
 
 
+    # Check completeness of case detail and offense detail
+    case_detail_complete = case_detail is not None and offense_detail is not None and hasattr(offense_detail, 'offense')
+    if not case_detail_complete:
+        show_error("Please Complete the Required Entries in Case Detail and Offense Tab")
+
+    # Check completeness of victim data
+    victim_data_complete = isinstance(victim_data, dict)
+    if not victim_data_complete:
+        show_error("Please Complete the Required Entries in Victim's Profile Tab")
+
+    # Check completeness of suspect data
+    suspect_data_complete = isinstance(suspect_data, dict)
+    if not suspect_data_complete:
+        show_error("Please Complete the Required Entries in Suspect's Profile Tab")
+
+    # Add submit button if all required data is complete
+    if case_detail_complete and victim_data_complete and suspect_data_complete:
+        if st.button("Submit Entry", type="primary", use_container_width=True):
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = []
+                futures.append(executor.submit(dataEntry_caseDetails, combined_value, case_detail, offense_detail, API_URL))
+                futures.append(executor.submit(dataEntry_victimDetails, combined_value, case_detail, API_URL))
+                futures.append(executor.submit(dataEntry_suspectDetails, combined_value, case_detail, API_URL))
+
+                # Wait for all futures to complete
+                for future in concurrent.futures.as_completed(futures):
+                    try:
+                        future.result()  # Get the result to raise any exceptions
+                    except Exception as e:
+                        show_error(f"An error occurred: {e}")
+
+
 
 
     elif st.session_state["authentication_status"] is False:
@@ -124,14 +166,6 @@ def entryForm():
         
     elif st.session_state["authentication_status"] is None:
         st.warning('Please enter your username and password')
-
-    if case_detail is not None:
-        if offense_detail is not None and hasattr(offense_detail, 'offense'):
-            validate_and_input_data_to_database(combined_value, case_detail, offense_detail, API_URL)
-        else:
-            print("offense_detail does not have an 'offense' attribute")
-
-
 
 
 # Call the entryForm function

@@ -127,3 +127,17 @@ class New_Entry_CaseDetails_Validation(BaseModel):
     offense_class: str
     case_status: str
     check: bool
+
+
+# class New_Entry_VictimData_Validation(BaseModel):
+#     vic_fname: str = Field(..., min_length=1, description="First name is required")
+#     vic_midname: Optional[str] = None
+#     vic_lname: str = Field(..., min_length=1, description="Last name is required")
+#     vic_qlfr: Optional[str] = None
+#     vic_alias: Optional[str] = None
+#     vic_gndr: str = Field(..., description="Gender is required")
+#     vic_age: Optional[int] = Field(..., ge=0, description="Age must be a non-negative integer")
+#     vic_distprov: str = Field(..., description="District/Province is required")
+#     vic_cityMun: str = Field(..., description="City/Municipality is required")
+#     vic_brgy: str = Field(..., description="Barangay is required")
+#     vic_strName: Optional[str] = None

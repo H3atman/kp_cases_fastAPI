@@ -18,8 +18,6 @@ def get_offense_classifications():
 
 data = get_offense_classifications()
 
-st.code(data)
-
 def addOffense():
     # Initialize Offense Values
     offense_classifications = get_offense_classifications()

@@ -90,12 +90,9 @@ class CaseDetailsModel(BaseModel):
 
     narrative: str
     date_reported: date
-    time_reported: time
-    date_committed: date
-    time_committed: time
-
-    class Config:
-        from_attributes = True
+    time_reported: Optional[time] = None
+    date_committed: Optional[date] = None
+    time_committed: Optional[time] = None
 
 
 
@@ -231,11 +228,8 @@ async def get_offense_classifications(db: Session = Depends(get_db)):
 
 @app.post("/case-details/")
 async def create_case_details(case_details: CaseDetailsModel, db: Session = Depends(get_db)):
-    # Validate the data here if necessary
-
     # Create a new database object
     db_case_details = models.CaseDetails(
-        id = str(uuid4()),
         entry_number=case_details.entry_number,
         offense=case_details.offense,
         offense_class=case_details.offense_class,
@@ -243,9 +237,9 @@ async def create_case_details(case_details: CaseDetailsModel, db: Session = Depe
         check=case_details.check,
         narrative=case_details.narrative,
         date_reported=case_details.date_reported,
-        time_reported =case_details.time_reported,
-        date_committed =case_details.date_committed,
-        time_committed =case_details.time_committed
+        time_reported=case_details.time_reported,
+        date_committed=case_details.date_committed,
+        time_committed=case_details.time_committed
     )
 
     # Add it to the database
@@ -254,3 +248,4 @@ async def create_case_details(case_details: CaseDetailsModel, db: Session = Depe
     db.refresh(db_case_details)
 
     return db_case_details
+

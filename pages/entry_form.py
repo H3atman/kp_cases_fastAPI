@@ -43,7 +43,7 @@ def fetch_combined_value_and_id(api_url):
 def entryForm():
 
     # Set page configuration
-    st.set_page_config(page_title="KP Cases Detailed Entry")
+    # st.set_page_config(page_title="KP Cases Detailed Entry")
 
     # Hide the sidebar with custom CSS
     hide_sidebar_css = '''
@@ -125,8 +125,12 @@ def entryForm():
     elif st.session_state["authentication_status"] is None:
         st.warning('Please enter your username and password')
 
+    if case_detail is not None:
+        if offense_detail is not None and hasattr(offense_detail, 'offense'):
+            validate_and_input_data_to_database(combined_value, case_detail, offense_detail, API_URL)
+        else:
+            print("offense_detail does not have an 'offense' attribute")
 
-    validate_and_input_data_to_database(combined_value, case_detail, offense_detail, API_URL)
 
 
 

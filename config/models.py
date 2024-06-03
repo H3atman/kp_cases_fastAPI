@@ -68,15 +68,14 @@ class CaseDetails(Base):
     __tablename__ = 'case_details'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    entry_number = Column(String, index=True)
-    offense = Column(String)
-    offense_class = Column(String)
-    case_status = Column(String)
-    check = Column(Boolean)
+    entry_number = Column(String, index=True, nullable=False)
+    offense = Column(String, nullable=False)
+    offense_class = Column(String, nullable=False)
+    case_status = Column(String, nullable=False)
+    check = Column(Boolean, nullable=False)
 
-
-    narrative = Column(String)
-    date_reported = Column(Date)
-    time_reported = Column(Time)
-    date_committed = Column(Date)
-    time_committed = Column(Time)
+    narrative = Column(String, nullable=False)
+    date_reported = Column(Date, nullable=False)
+    time_reported = Column(Time, nullable=True)
+    date_committed = Column(Date, nullable=True)
+    time_committed = Column(Time, nullable=True)

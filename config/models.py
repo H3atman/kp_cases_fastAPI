@@ -79,3 +79,20 @@ class CaseDetails(Base):
     time_reported = Column(Time, nullable=True)
     date_committed = Column(Date, nullable=True)
     time_committed = Column(Time, nullable=True)
+
+
+class Victim_Details(Base):
+    __tablename__ = 'victim_details'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    vic_fname= Column(String)
+    vic_midname= Column(String)
+    vic_lname= Column(String)
+    vic_qlfr= Column(String)
+    vic_alias= Column(String)
+    vic_gndr= Column(String)
+    vic_age= Column(Integer)
+    vic_distprov= Column(String)
+    vic_cityMun= Column(String)
+    vic_cityMun= Column(String)
+    vic_strName= Column(String)

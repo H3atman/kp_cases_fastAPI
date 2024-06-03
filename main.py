@@ -8,6 +8,7 @@ from config.database import engine, SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from datetime import date, time
+from modules import dataValidation as dv
 
 app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
@@ -93,6 +94,9 @@ class CaseDetailsModel(BaseModel):
     time_reported: Optional[time] = None
     date_committed: Optional[date] = None
     time_committed: Optional[time] = None
+
+
+
 
 
 
@@ -249,3 +253,11 @@ async def create_case_details(case_details: CaseDetailsModel, db: Session = Depe
 
     return db_case_details
 
+
+@app.post("/victim-new-entry/", response_model=dv.VictimData_Validation)
+async def create_victim(victim: dv.VictimData_Validation, db: Session = Depends(get_db)):
+    db_victim = models.Victim_Details(**victim.model_dump())
+    db.add(db_victim)
+    db.commit()
+    db.refresh(db_victim)
+    return db_victim

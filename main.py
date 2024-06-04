@@ -1,14 +1,15 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Annotated,  List, Optional
-from uuid import UUID, uuid4
+from uuid import UUID
 import bcrypt
 import config.models as models
 from config.database import engine, SessionLocal
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 from datetime import date, time
 from modules import dataValidation as dv
+import pandas as pd
 
 app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
@@ -95,7 +96,17 @@ class CaseDetailsModel(BaseModel):
     date_committed: Optional[date] = None
     time_committed: Optional[time] = None
 
-
+# Define the Pydantic model for the response data
+class CaseData(BaseModel):
+    entry_number: str
+    offense: str
+    case_status: str
+    date_reported: date
+    time_reported: time
+    date_committed: date
+    time_committed: time
+    victim_details: str
+    suspect_details: str
 
 
 
@@ -272,3 +283,93 @@ async def enter_victim(suspect: dv.New_Entry_SuspectData_Validation, db: Session
     db.commit()
     db.refresh(db_suspect)
     return db_suspect
+
+
+# Define the endpoint
+@app.get('/cases')
+def get_cases(db: Session = Depends(get_db)):
+    # Create a query
+    query = (
+        select(
+            models.CaseDetails.entry_number,
+            models.CaseDetails.offense,
+            models.CaseDetails.case_status,
+            models.CaseDetails.date_reported,
+            models.CaseDetails.time_reported,
+            models.CaseDetails.date_committed,
+            models.CaseDetails.time_committed,
+            models.Victim_Details.vic_fname,
+            models.Victim_Details.vic_midname,
+            models.Victim_Details.vic_lname,
+            models.Victim_Details.vic_qlfr,
+            models.Victim_Details.vic_alias,
+            models.Victim_Details.vic_age,
+            models.Victim_Details.vic_gndr,
+            models.Suspect_Details.sus_fname,
+            models.Suspect_Details.sus_midname,
+            models.Suspect_Details.sus_lname,
+            models.Suspect_Details.sus_qlfr,
+            models.Suspect_Details.sus_alias,
+            models.Suspect_Details.sus_age,
+            models.Suspect_Details.sus_gndr,
+        )
+        .select_from(models.CaseDetails)
+        .join(models.Victim_Details, models.CaseDetails.entry_number == models.Victim_Details.entry_number)
+        .join(models.Suspect_Details, models.CaseDetails.entry_number == models.Suspect_Details.entry_number)
+    )
+
+    # Execute the query
+    result = db.execute(query)
+
+    # Fetch all the rows
+    rows = result.fetchall()
+
+    # Convert the rows to a DataFrame
+    df = pd.DataFrame(rows, columns=[
+        "entry_number",
+        "offense",
+        "case_status",
+        "date_reported",
+        "time_reported",
+        "date_committed",
+        "time_committed",
+        "vic_fname",
+        "vic_midname",
+        "vic_lname",
+        "vic_qlfr",
+        "vic_alias",
+        "vic_age",
+        "vic_gndr",
+        "sus_fname",
+        "sus_midname",
+        "sus_lname",
+        "sus_qlfr",
+        "sus_alias",
+        "sus_age",
+        "sus_gndr",
+    ])
+
+    # Add the victim_details and suspect_details columns
+    df["victim_details"] = df.apply(lambda row: f"{row.vic_fname} {row.vic_midname} {row.vic_lname} {row.vic_qlfr} {row.vic_alias} ({row.vic_age}/{row.vic_gndr})", axis=1)
+    df["suspect_details"] = df.apply(lambda row: f"{row.sus_fname} {row.sus_midname} {row.sus_lname} {row.sus_qlfr} {row.sus_alias} ({row.sus_age}/{row.sus_gndr})", axis=1)
+
+    # Drop the individual victim and suspect details columns
+    df = df.drop(columns=[
+        "vic_fname",
+        "vic_midname",
+        "vic_lname",
+        "vic_qlfr",
+        "vic_alias",
+        "vic_age",
+        "vic_gndr",
+        "sus_fname",
+        "sus_midname",
+        "sus_lname",
+        "sus_qlfr",
+        "sus_alias",
+        "sus_age",
+        "sus_gndr",
+    ])
+
+    # Return the DataFrame as a JSON response
+    return df

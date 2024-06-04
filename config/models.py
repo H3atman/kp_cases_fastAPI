@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, Text, Date, Time, ForeignKey
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, Date, Time, ForeignKey, func
 from sqlalchemy.orm import relationship
 from config.database import Base
 from sqlalchemy.sql import func
@@ -74,12 +74,14 @@ class CaseDetails(Base):
     offense_class = Column(String, nullable=False)
     case_status = Column(String, nullable=False)
     check = Column(Boolean, nullable=False)
-
     narrative = Column(String, nullable=False)
     date_reported = Column(Date, nullable=False)
     time_reported = Column(Time, nullable=True)
     date_committed = Column(Date, nullable=True)
     time_committed = Column(Time, nullable=True)
+
+    victims = relationship("Victim_Details", back_populates="case")
+    suspects = relationship("Suspect_Details", back_populates="case")
 
 
 class Victim_Details(Base):
@@ -87,18 +89,20 @@ class Victim_Details(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     created_at = Column(DateTime(timezone=False), server_default=func.now())
-    entry_number = Column(String, index=True)
-    vic_fname= Column(String)
-    vic_midname= Column(String)
-    vic_lname= Column(String)
-    vic_qlfr= Column(String)
-    vic_alias= Column(String)
-    vic_gndr= Column(String)
-    vic_age= Column(Integer)
-    vic_distprov= Column(String)
-    vic_cityMun= Column(String)
-    vic_brgy= Column(String)
-    vic_strName= Column(String)
+    entry_number = Column(String, ForeignKey('case_details.entry_number'), index=True)
+    vic_fname = Column(String)
+    vic_midname = Column(String)
+    vic_lname = Column(String)
+    vic_qlfr = Column(String)
+    vic_alias = Column(String)
+    vic_gndr = Column(String)
+    vic_age = Column(Integer)
+    vic_distprov = Column(String)
+    vic_cityMun = Column(String)
+    vic_brgy = Column(String)
+    vic_strName = Column(String)
+
+    case = relationship("CaseDetails", back_populates="victims")
 
 
 class Suspect_Details(Base):
@@ -106,15 +110,17 @@ class Suspect_Details(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     created_at = Column(DateTime(timezone=False), server_default=func.now())
-    entry_number = Column(String, index=True)
-    sus_fname= Column(String)
-    sus_midname= Column(String)
-    sus_lname= Column(String)
-    sus_qlfr= Column(String)
-    sus_alias= Column(String)
-    sus_gndr= Column(String)
-    sus_age= Column(Integer)
-    sus_distprov= Column(String)
-    sus_cityMun= Column(String)
-    sus_brgy= Column(String)
-    sus_strName= Column(String)
+    entry_number = Column(String, ForeignKey('case_details.entry_number'), index=True)
+    sus_fname = Column(String)
+    sus_midname = Column(String)
+    sus_lname = Column(String)
+    sus_qlfr = Column(String)
+    sus_alias = Column(String)
+    sus_gndr = Column(String)
+    sus_age = Column(Integer)
+    sus_distprov = Column(String)
+    sus_cityMun = Column(String)
+    sus_brgy = Column(String)
+    sus_strName = Column(String)
+
+    case = relationship("CaseDetails", back_populates="suspects")

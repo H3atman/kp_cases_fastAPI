@@ -1,6 +1,7 @@
 import streamlit as st
 from modules.newEntry_comp import newEntry  # Import custom component for new entries
 from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator  # Import authentication utilities
+from modules.encoded_data import encoded_data
 
 # Set page configuration
 st.set_page_config(page_title="KP Cases Dashboard")
@@ -43,12 +44,16 @@ if st.session_state["authentication_status"]:
 
     with tab2:
         st.subheader("Show Encoded Data")
+        encoded_data()
+
 
     with tab3:
         st.subheader("You can edit you entries here")
+        st.write(":red[Under Development]")
 
     with tab4:
         st.subheader("You can change your password here")
+        st.write(":red[Under Development]")
 
 elif st.session_state["authentication_status"] is False:
     st.error('Username/password is incorrect')

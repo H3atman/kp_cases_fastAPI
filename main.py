@@ -256,8 +256,8 @@ async def create_case_details(case_details: CaseDetailsModel, db: Session = Depe
     return db_case_details
 
 
-@app.post("/victim-new-entry/", response_model=dv.VictimData_Validation)
-async def enter_victim(victim: dv.VictimData_Validation, db: Session = Depends(get_db)):
+@app.post("/victim-new-entry/", response_model=dv.New_Entry_VictimData_Validation)
+async def enter_victim(victim: dv.New_Entry_VictimData_Validation, db: Session = Depends(get_db)):
     db_victim = models.Victim_Details(**victim.model_dump())
     db.add(db_victim)
     db.commit()
@@ -265,8 +265,8 @@ async def enter_victim(victim: dv.VictimData_Validation, db: Session = Depends(g
     return db_victim
 
 
-@app.post("/suspect-new-entry/", response_model=dv.SuspectData_Validation)
-async def enter_victim(suspect: dv.SuspectData_Validation, db: Session = Depends(get_db)):
+@app.post("/suspect-new-entry/", response_model=dv.New_Entry_SuspectData_Validation)
+async def enter_victim(suspect: dv.New_Entry_SuspectData_Validation, db: Session = Depends(get_db)):
     db_suspect = models.Suspect_Details(**suspect.model_dump())
     db.add(db_suspect)
     db.commit()

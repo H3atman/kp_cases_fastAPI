@@ -3,11 +3,9 @@ from modules.auth_utils import fetch_users, prepare_credentials, initialize_auth
 import requests
 import time
 from forms import offenses, victims, suspects, caseDetails
-from modules.dataValidation import Entry_Number_Validation
 from modules.newEntry_functions import *
 from pydantic import ValidationError
 import concurrent.futures
-
 
 
 def process_offense(offense, offense_class, otherOffense, case_status, check):
@@ -133,12 +131,12 @@ def entryForm():
         show_error("Please Complete the Required Entries in Case Detail and Offense Tab")
 
     # Check completeness of victim data
-    victim_data_complete = isinstance(victim_data, dict)
+    victim_data_complete = victim_data is not None
     if not victim_data_complete:
         show_error("Please Complete the Required Entries in Victim's Profile Tab")
 
     # Check completeness of suspect data
-    suspect_data_complete = isinstance(suspect_data, dict)
+    suspect_data_complete = suspect_data is not None
     if not suspect_data_complete:
         show_error("Please Complete the Required Entries in Suspect's Profile Tab")
 
@@ -148,8 +146,8 @@ def entryForm():
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 futures = []
                 futures.append(executor.submit(dataEntry_caseDetails, combined_value, case_detail, offense_detail, API_URL))
-                futures.append(executor.submit(dataEntry_victimDetails, combined_value, case_detail, API_URL))
-                futures.append(executor.submit(dataEntry_suspectDetails, combined_value, case_detail, API_URL))
+                futures.append(executor.submit(dataEntry_victimDetails, combined_value, victim_data, API_URL))
+                futures.append(executor.submit(dataEntry_suspectDetails, combined_value, suspect_data, API_URL))
 
                 # Wait for all futures to complete
                 for future in concurrent.futures.as_completed(futures):

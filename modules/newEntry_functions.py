@@ -1,7 +1,9 @@
 import requests
-from config.models import CaseDetails, Victim_Details, Suspect_Details
+from config.models import CaseDetails
 import streamlit as st
 from datetime import date, time
+import json
+
 # import json
 
 def dataEntry_caseDetails(entry_number, case_detail, offense_detail, api_url):
@@ -52,7 +54,7 @@ def dataEntry_caseDetails(entry_number, case_detail, offense_detail, api_url):
     response = requests.post(f"{api_url}/case-details/", json=serializable_case_detail_data)
 
     if response.status_code == 200:
-        print("Data successfully input to the database.")
+        print("Case Detail Data successfully input to the database.")
     else:
         print("Failed to input data to the database.")
 
@@ -64,7 +66,6 @@ def dataEntry_victimDetails(entry_number, victim_data, api_url):
     # Ensure victim_data is a dictionary
     if isinstance(victim_data, str):
         # Handle the case where victim_data is a string, perhaps from JSON
-        import json
         try:
             victim_data = json.loads(victim_data)
         except json.JSONDecodeError:
@@ -80,14 +81,20 @@ def dataEntry_victimDetails(entry_number, victim_data, api_url):
     # Filter out None values
     victim_data = {k: v for k, v in victim_data.items() if v is not None}
 
+    # Print the data to be sent
+    print("Data to be sent:", victim_data)
+
     # Send the data as a JSON payload to the API
     response = requests.post(f"{api_url}/victim-new-entry/", json=victim_data)
+
+    # Print the response status and text for debugging
+    print("Response status code:", response.status_code)
+    print("Response text:", response.text)
 
     if response.status_code == 200:
         print("Data successfully input to the database.")
     else:
-        print("Failed to input data to the database.")
-
+        print("Failed to input data to the database. Status code:", response.status_code)
 
 
 
@@ -116,7 +123,7 @@ def dataEntry_suspectDetails(entry_number, suspect_data, api_url):
     response = requests.post(f"{api_url}/suspect-new-entry/", json=suspect_data)
 
     if response.status_code == 200:
-        print("Data successfully input to the database.")
+        print("Suspect Data successfully input to the database.")
     else:
         print("Failed to input data to the database.")
 

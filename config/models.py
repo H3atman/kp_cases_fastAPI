@@ -68,6 +68,7 @@ class CaseDetails(Base):
     __tablename__ = 'case_details'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    created_at = Column(DateTime(timezone=False), server_default=func.now())
     entry_number = Column(String, index=True, nullable=False)
     offense = Column(String, nullable=False)
     offense_class = Column(String, nullable=False)
@@ -85,6 +86,7 @@ class Victim_Details(Base):
     __tablename__ = 'victim_details'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    created_at = Column(DateTime(timezone=False), server_default=func.now())
     entry_number = Column(String, index=True)
     vic_fname= Column(String)
     vic_midname= Column(String)
@@ -103,6 +105,7 @@ class Suspect_Details(Base):
     __tablename__ = 'suspect_details'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    created_at = Column(DateTime(timezone=False), server_default=func.now())
     entry_number = Column(String, index=True)
     sus_fname= Column(String)
     sus_midname= Column(String)

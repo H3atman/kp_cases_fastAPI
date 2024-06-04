@@ -129,15 +129,32 @@ class New_Entry_CaseDetails_Validation(BaseModel):
     check: bool
 
 
-# class New_Entry_VictimData_Validation(BaseModel):
-#     vic_fname: str = Field(..., min_length=1, description="First name is required")
-#     vic_midname: Optional[str] = None
-#     vic_lname: str = Field(..., min_length=1, description="Last name is required")
-#     vic_qlfr: Optional[str] = None
-#     vic_alias: Optional[str] = None
-#     vic_gndr: str = Field(..., description="Gender is required")
-#     vic_age: Optional[int] = Field(..., ge=0, description="Age must be a non-negative integer")
-#     vic_distprov: str = Field(..., description="District/Province is required")
-#     vic_cityMun: str = Field(..., description="City/Municipality is required")
-#     vic_brgy: str = Field(..., description="Barangay is required")
-#     vic_strName: Optional[str] = None
+
+class New_Entry_VictimData_Validation(BaseModel):
+    entry_number: str  = Field(..., alias="entry_number")
+    vic_fname: str = Field(..., min_length=1, description="First name is required")
+    vic_midname: Optional[str] = None
+    vic_lname: str = Field(..., min_length=1, description="Last name is required")
+    vic_qlfr: Optional[str] = None
+    vic_alias: Optional[str] = None
+    vic_gndr: str = Field(..., description="Gender is required")
+    vic_age: Optional[int] = Field(..., ge=0, description="Age must be a non-negative integer")
+    vic_distprov: str = Field(..., description="District/Province is required")
+    vic_cityMun: str = Field(..., description="City/Municipality is required")
+    vic_brgy: str = Field(..., description="Barangay is required")
+    vic_strName: Optional[str] = None
+
+
+class New_Entry_SuspectData_Validation(BaseModel):
+    entry_number: str  = Field(..., alias="entry_number")
+    sus_fname: Optional[str] = None
+    sus_midname: Optional[str] = None
+    sus_lname: Optional[str] = None
+    sus_qlfr: Optional[str] = None
+    sus_alias: Optional[str] = None
+    sus_gndr: Optional[str] = Field(None, description="Gender is required")
+    sus_age: Optional[int] = Field(0, ge=0, description="Age must be a non-negative integer")
+    sus_distprov: Optional[str] = Field(None, description="District/Province is required")
+    sus_cityMun: Optional[str] = Field(None, description="City/Municipality is required")
+    sus_brgy: Optional[str] = Field(None, description="Barangay is required")
+    sus_strName: Optional[str] = None

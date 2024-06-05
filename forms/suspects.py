@@ -20,9 +20,12 @@ def get_brgy_city_mun(mps_cps):
     return brgy_values, city_mun_value, province_value
 
 
-def addSuspect(mps_cps):
+def addSuspect(mps_cps,ppo_cpo,pro):
     # Initialize Barangay Values and City Mun Values
     brgy_values, city_mun_value, province_value = get_brgy_city_mun(mps_cps)
+
+    pro = pro
+    ppo_cpo = ppo_cpo
 
     # First, Middle, and Last Name Portion
     fname, mname = st.columns(2)
@@ -34,6 +37,10 @@ def addSuspect(mps_cps):
     qlfr, alias, gndr= st.columns(3)
     sus_qlfr = qlfr.text_input("Qualifier",key="sus_qlfr")
     sus_alias = alias.text_input("Alias",key="sus_alias")
+    if sus_alias is None:
+        sus_alias = None
+    else:
+        sus_alias = f"alias {sus_alias}"
     with gndr:
         sus_gndr = st.radio("Gender",("Male", "Female"),index=None,horizontal=True,key="sus_gndr")
 
@@ -59,6 +66,9 @@ def addSuspect(mps_cps):
 
     # Create a dictionary of the data
     data = {
+        "pro": pro,
+        "ppo_cpo": ppo_cpo,
+        "mps_cps": mps_cps,
         "sus_fname": sus_fname,
         "sus_midname": sus_midname,
         "sus_lname": sus_lname,
@@ -74,6 +84,9 @@ def addSuspect(mps_cps):
 
     # Mapping of field names to user-friendly names
     field_name_mapping = {
+        "pro": "PRO",
+        "ppo_cpo": "PPO",
+        "mps_cps": "Station",
         "sus_fname": "Suspect's First Name",
         "sus_midname": "Suspect's Middle Name",
         "sus_lname": "Suspect's Last Name",

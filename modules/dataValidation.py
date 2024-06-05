@@ -3,6 +3,9 @@ from typing import Optional
 from datetime import date, time
 
 class VictimData_Validation(BaseModel):
+    pro: str
+    ppo_cpo: str
+    mps_cps: str
     vic_fname: str = Field(..., min_length=1, description="First name is required")
     vic_midname: Optional[str] = None
     vic_lname: str = Field(..., min_length=1, description="Last name is required")
@@ -30,10 +33,13 @@ class VictimData_Validation(BaseModel):
     @field_validator('vic_gndr')
     def gender_must_be_valid(cls, gender):
         if gender is not None and gender not in ("Male", "Female"):
-            return None
+            return "Unidentified"
         return gender
 
 class SuspectData_Validation(BaseModel):
+    pro: str
+    ppo_cpo: str
+    mps_cps: str
     sus_fname: Optional[str] = None
     sus_midname: Optional[str] = None
     sus_lname: Optional[str] = None
@@ -67,7 +73,7 @@ class SuspectData_Validation(BaseModel):
     @field_validator('sus_gndr')
     def gender_must_be_valid(cls, gender):
         if gender is not None and gender not in ("Male", "Female"):
-            return None
+            return "Unidentified"
         return gender
     
     @field_validator('sus_brgy')
@@ -79,6 +85,9 @@ class SuspectData_Validation(BaseModel):
 
 # Pydantic model for case details validation
 class Case_Detail_Validation(BaseModel):
+    pro: str
+    ppo_cpo: str
+    mps_cps: str
     det_narrative: Optional[str] = Field(None, description="Narrative description of the case")
     dt_reported: date = Field(..., description="Date Reported")
     time_reported: Optional[time]
@@ -117,6 +126,9 @@ class Entry_Number_Validation(BaseModel):
 
 # ==============================================
 class New_Entry_CaseDetails_Validation(BaseModel):
+    pro: Optional[str]
+    ppo_cpo: Optional[str]
+    mps_cps: Optional[str]
     det_narrative: Optional[str] = Field(None, description="Narrative description of the case")
     dt_reported: date = Field(..., description="Date Reported")
     time_reported: Optional[time]
@@ -132,6 +144,9 @@ class New_Entry_CaseDetails_Validation(BaseModel):
 
 class New_Entry_VictimData_Validation(BaseModel):
     entry_number: str  = Field(..., alias="entry_number")
+    pro: str
+    ppo_cpo: str
+    mps_cps: str
     vic_fname: str = Field(..., min_length=1, description="First name is required")
     vic_midname: Optional[str] = None
     vic_lname: str = Field(..., min_length=1, description="Last name is required")
@@ -147,6 +162,9 @@ class New_Entry_VictimData_Validation(BaseModel):
 
 class New_Entry_SuspectData_Validation(BaseModel):
     entry_number: str  = Field(..., alias="entry_number")
+    pro: str
+    ppo_cpo: str
+    mps_cps: str
     sus_fname: Optional[str] = None
     sus_midname: Optional[str] = None
     sus_lname: Optional[str] = None

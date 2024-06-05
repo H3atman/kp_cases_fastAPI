@@ -20,10 +20,12 @@ def get_brgy_city_mun(mps_cps):
     return brgy_values, city_mun_value, province_value
 
 
-def addVictim(mps_cps):
+def addVictim(mps_cps,ppo_cpo,pro):
     # Initialize Barangay Values and City Mun Values
     brgy_values, city_mun_value, province_value = get_brgy_city_mun(mps_cps)
 
+    pro = pro
+    ppo_cpo = ppo_cpo
 
     # First, Middle, and Last Name Portion
     fname, mname = st.columns(2)
@@ -40,6 +42,11 @@ def addVictim(mps_cps):
     qlfr, alias, gndr= st.columns(3)
     vic_qlfr = qlfr.text_input("Qualifier",key="vic_qlfr")
     vic_alias = alias.text_input("Alias",key="vic_alias")
+    if vic_alias is None:
+        vic_alias = None
+    else:
+        vic_alias = f"alias {vic_alias}"
+
     with gndr:
         vic_gndr = st.radio("Gender :red[#]",("Male", "Female"),index=None,horizontal=True,key="vic_gndr")
 
@@ -75,6 +82,9 @@ def addVictim(mps_cps):
 
     # Create a dictionary of the data
     data = {
+        "pro": pro,
+        "ppo_cpo": ppo_cpo,
+        "mps_cps": mps_cps,
         "vic_fname": vic_fname,
         "vic_midname": vic_midname,
         "vic_lname": vic_lname,
@@ -90,6 +100,9 @@ def addVictim(mps_cps):
 
     # Mapping of field names to user-friendly names
     field_name_mapping = {
+        "pro": "PRO",
+        "ppo_cpo": "PPO",
+        "mps_cps": "Station",
         "vic_fname": "Victim's First Name",
         "vic_midname": "Victim's Middle Name",
         "vic_lname": "Victim's Last Name",

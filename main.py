@@ -10,6 +10,7 @@ from sqlalchemy import select, func
 from datetime import date, time
 from modules import dataValidation as dv
 import pandas as pd
+from sqlalchemy.orm import aliased
 
 app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
@@ -85,6 +86,9 @@ class Offense_Classification(BaseModel):
 
 class CaseDetailsModel(BaseModel):
     entry_number: str
+    pro: str
+    ppo_cpo: str
+    mps_cps: str
     offense: str
     offense_class: str
     case_status: str
@@ -99,6 +103,9 @@ class CaseDetailsModel(BaseModel):
 # Define the Pydantic model for the response data
 class CaseData(BaseModel):
     entry_number: str
+    pro: str
+    ppo_cpo: str
+    mps_cps: str
     offense: str
     case_status: str
     date_reported: date
@@ -247,6 +254,9 @@ async def get_offense_classifications(db: Session = Depends(get_db)):
 async def create_case_details(case_details: CaseDetailsModel, db: Session = Depends(get_db)):
     # Create a new database object
     db_case_details = models.CaseDetails(
+		pro= case_details.pro,
+        ppo_cpo= case_details.ppo_cpo,
+        mps_cps= case_details.mps_cps,
         entry_number=case_details.entry_number,
         offense=case_details.offense,
         offense_class=case_details.offense_class,
@@ -276,6 +286,7 @@ async def enter_victim(victim: dv.New_Entry_VictimData_Validation, db: Session =
     return db_victim
 
 
+
 @app.post("/suspect-new-entry/", response_model=dv.New_Entry_SuspectData_Validation)
 async def enter_victim(suspect: dv.New_Entry_SuspectData_Validation, db: Session = Depends(get_db)):
     db_suspect = models.Suspect_Details(**suspect.model_dump())
@@ -285,10 +296,47 @@ async def enter_victim(suspect: dv.New_Entry_SuspectData_Validation, db: Session
     return db_suspect
 
 
-# Define the endpoint
+
+
 @app.get('/cases')
 def get_cases(db: Session = Depends(get_db)):
-    # Create a query
+    # Aliases for Victim_Details and Suspect_Details for aggregation
+    victims_alias = aliased(models.Victim_Details)
+    suspects_alias = aliased(models.Suspect_Details)
+
+    # Subquery to aggregate victim details
+    victim_subquery = (
+        select(
+            victims_alias.entry_number,
+            func.string_agg(
+                func.concat(
+                    victims_alias.vic_fname, ' ', victims_alias.vic_midname, ' ',
+                    victims_alias.vic_lname, ' ', victims_alias.vic_qlfr, ' ',
+                    victims_alias.vic_alias, ' (', victims_alias.vic_age, '/', victims_alias.vic_gndr, ')'
+                ), '; '
+            ).label('victim_details')
+        )
+        .group_by(victims_alias.entry_number)
+        .subquery()
+    )
+
+    # Subquery to aggregate suspect details
+    suspect_subquery = (
+        select(
+            suspects_alias.entry_number,
+            func.string_agg(
+                func.concat(
+                    suspects_alias.sus_fname, ' ', suspects_alias.sus_midname, ' ',
+                    suspects_alias.sus_lname, ' ', suspects_alias.sus_qlfr, ' ',
+                    suspects_alias.sus_alias, ' (', suspects_alias.sus_age, '/', suspects_alias.sus_gndr, ')'
+                ), '; '
+            ).label('suspect_details')
+        )
+        .group_by(suspects_alias.entry_number)
+        .subquery()
+    )
+
+    # Main query to select case details and join with victim and suspect details
     query = (
         select(
             models.CaseDetails.entry_number,
@@ -298,24 +346,11 @@ def get_cases(db: Session = Depends(get_db)):
             models.CaseDetails.time_reported,
             models.CaseDetails.date_committed,
             models.CaseDetails.time_committed,
-            models.Victim_Details.vic_fname,
-            models.Victim_Details.vic_midname,
-            models.Victim_Details.vic_lname,
-            models.Victim_Details.vic_qlfr,
-            models.Victim_Details.vic_alias,
-            models.Victim_Details.vic_age,
-            models.Victim_Details.vic_gndr,
-            models.Suspect_Details.sus_fname,
-            models.Suspect_Details.sus_midname,
-            models.Suspect_Details.sus_lname,
-            models.Suspect_Details.sus_qlfr,
-            models.Suspect_Details.sus_alias,
-            models.Suspect_Details.sus_age,
-            models.Suspect_Details.sus_gndr,
+            victim_subquery.c.victim_details,
+            suspect_subquery.c.suspect_details
         )
-        .select_from(models.CaseDetails)
-        .join(models.Victim_Details, models.CaseDetails.entry_number == models.Victim_Details.entry_number)
-        .join(models.Suspect_Details, models.CaseDetails.entry_number == models.Suspect_Details.entry_number)
+        .outerjoin(victim_subquery, models.CaseDetails.entry_number == victim_subquery.c.entry_number)
+        .outerjoin(suspect_subquery, models.CaseDetails.entry_number == suspect_subquery.c.entry_number)
     )
 
     # Execute the query
@@ -333,47 +368,14 @@ def get_cases(db: Session = Depends(get_db)):
         "time_reported",
         "date_committed",
         "time_committed",
-        "vic_fname",
-        "vic_midname",
-        "vic_lname",
-        "vic_qlfr",
-        "vic_alias",
-        "vic_age",
-        "vic_gndr",
-        "sus_fname",
-        "sus_midname",
-        "sus_lname",
-        "sus_qlfr",
-        "sus_alias",
-        "sus_age",
-        "sus_gndr",
+        "victim_details",
+        "suspect_details"
     ])
 
-    # Add the victim_details and suspect_details columns
-    df["victim_details"] = df.apply(lambda row: f"{row.vic_fname} {row.vic_midname} {row.vic_lname} {row.vic_qlfr} {row.vic_alias} ({row.vic_age}/{row.vic_gndr})", axis=1)
-    df["suspect_details"] = df.apply(lambda row: f"{row.sus_fname} {row.sus_midname} {row.sus_lname} {row.sus_qlfr} {row.sus_alias} ({row.sus_age}/{row.sus_gndr})", axis=1)
+    # Drop the time_reported and time_committed columns if not needed
+    df = df.drop(columns=["time_reported", "time_committed"])
 
-    # Drop the individual victim and suspect details columns
-    df = df.drop(columns=[
-        "time_reported",
-        "time_committed",
-        "vic_fname",
-        "vic_midname",
-        "vic_lname",
-        "vic_qlfr",
-        "vic_alias",
-        "vic_age",
-        "vic_gndr",
-        "sus_fname",
-        "sus_midname",
-        "sus_lname",
-        "sus_qlfr",
-        "sus_alias",
-        "sus_age",
-        "sus_gndr",
-    ])
-
-        # Rename columns if needed
+    # Rename columns if needed
     df = df.rename(columns={
         "entry_number": "Entry Number",
         "offense": "Offense",

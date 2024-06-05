@@ -95,6 +95,7 @@ def entryForm():
 
         username = st.session_state['username']
         user_info = credentials["usernames"].get(username, {})
+        pro = "PRO 12"
         mps_cps = user_info.get("mps_cps", "")
         ppo_cpo = user_info.get("ppo_cpo", "")
         
@@ -108,17 +109,17 @@ def entryForm():
 
         with complainant:
             st.subheader("Victims's Profile")
-            victim_data = victims.addVictim(mps_cps)
+            victim_data = victims.addVictim(mps_cps,ppo_cpo,pro)
 
 
         with suspect:
             st.subheader("Suspect's Profile")
-            suspect_data = suspects.addSuspect(mps_cps)
+            suspect_data = suspects.addSuspect(mps_cps,ppo_cpo,pro)
 
 
         with caseDetail:
             st.subheader("Case Details")
-            case_detail = caseDetails.case_Details()
+            case_detail = caseDetails.case_Details(mps_cps,ppo_cpo,pro)
         
         with offense:
             st.subheader("Offense :red[#]")

@@ -95,7 +95,7 @@ def addOffense():
     field_name_mapping = {
         "offense": "Type of Offense based on the Dropdown",
         "offense_class": "Offense Classification",
-        "otherOffense": "If Offense is not it the Dropdown, Type Offense Here",
+        "otherOffense": "If Offense is not in the Dropdown, Type Offense Here",
         "case_status": "Status of the Offense",
         "check": "Check if the check function is enabled"
     }

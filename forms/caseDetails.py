@@ -5,8 +5,13 @@ from modules.dataValidation import Case_Detail_Validation
 from pydantic import ValidationError
 
 
-def case_Details():
+def case_Details(mps_cps,ppo_cpo,pro):
     det_narrative = st.text_area("Narrative")
+
+
+    pro = pro
+    ppo_cpo = ppo_cpo
+    mps_cps = mps_cps
 
     st.write("---")
 

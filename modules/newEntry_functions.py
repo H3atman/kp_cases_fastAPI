@@ -22,6 +22,9 @@ def dataEntry_caseDetails(entry_number, case_detail, offense_detail, api_url):
     # Create the data dictionary
     data = {
         "entry_number": entry_number,
+        "pro":case_detail.pro,
+        "ppo_cpo":case_detail.ppo_cpo,
+        "mps_cps":case_detail.mps_cps,
         "offense": offense_detail.offense,
         "offense_class": offense_detail.offense_class,
         "case_status": offense_detail.case_status,
@@ -82,17 +85,17 @@ def dataEntry_victimDetails(entry_number, victim_data, api_url):
     victim_data = {k: v for k, v in victim_data.items() if v is not None}
 
     # Print the data to be sent
-    print("Data to be sent:", victim_data)
+    # print("Data to be sent:", victim_data)
 
     # Send the data as a JSON payload to the API
     response = requests.post(f"{api_url}/victim-new-entry/", json=victim_data)
 
     # Print the response status and text for debugging
-    print("Response status code:", response.status_code)
-    print("Response text:", response.text)
+    # print("Response status code:", response.status_code)
+    # print("Response text:", response.text)
 
     if response.status_code == 200:
-        print("Data successfully input to the database.")
+        print("Victim Data successfully input to the database.")
     else:
         print("Failed to input data to the database. Status code:", response.status_code)
 

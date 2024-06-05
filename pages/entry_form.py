@@ -1,7 +1,7 @@
+from time import sleep
 import streamlit as st
 from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator
 import requests
-import time
 from forms import offenses, victims, suspects, caseDetails
 from modules.newEntry_functions import *
 from pydantic import ValidationError
@@ -81,7 +81,7 @@ def entryForm():
         # Redirect to home page if combined_value is None
         if combined_value is None:
             st.warning("No combined value found. Redirecting to home page.")
-            time.sleep(3)
+            sleep(3)
             st.switch_page('app.py')
 
         if st.button("Home"):

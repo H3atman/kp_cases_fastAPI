@@ -355,6 +355,8 @@ def get_cases(db: Session = Depends(get_db)):
 
     # Drop the individual victim and suspect details columns
     df = df.drop(columns=[
+        "time_reported",
+        "time_committed",
         "vic_fname",
         "vic_midname",
         "vic_lname",
@@ -370,6 +372,17 @@ def get_cases(db: Session = Depends(get_db)):
         "sus_age",
         "sus_gndr",
     ])
+
+        # Rename columns if needed
+    df = df.rename(columns={
+        "entry_number": "Entry Number",
+        "offense": "Offense",
+        "case_status": "Case Status",
+        "date_reported": "Date Reported",
+        "date_committed": "Date Committed",
+        "victim_details": "Victim Details",
+        "suspect_details": "Suspect Details"
+    })
 
     # Return the DataFrame as a JSON response
     return df

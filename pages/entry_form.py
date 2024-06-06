@@ -87,11 +87,11 @@ def entryForm():
 
         if st.button("Home"):
             if entry_id is not None:
-                response = requests.delete(f"{API_URL}/temp-entries/{entry_id}")
-                if response.status_code == 200:
-                    st.success("Successfully deleted the entry")
-                else:
-                    st.error("Failed to delete the entry")
+                requests.delete(f"{API_URL}/temp-entries/{entry_id}")
+                # if response.status_code == 200:
+                #     st.success("Successfully deleted the entry")
+                # else:
+                #     st.error("Failed to delete the entry")
             st.switch_page('app.py')
 
         username = st.session_state['username']
@@ -157,6 +157,9 @@ def entryForm():
                         future.result()  # Get the result to raise any exceptions
                     except Exception as e:
                         show_error(f"An error occurred: {e}")
+            #  Delete temp-entry and go back to main page
+            requests.delete(f"{API_URL}/temp-entries/{entry_id}")
+            st.switch_page('app.py')
 
 
 

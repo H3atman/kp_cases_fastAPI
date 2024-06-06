@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, Date, Time, ForeignKey, func
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, Date, Time, ForeignKey, func, TIMESTAMP
 from sqlalchemy.orm import relationship
 from config.database import Base
 from sqlalchemy.sql import func
@@ -68,7 +68,7 @@ class CaseDetails(Base):
     __tablename__ = 'case_details'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = Column(DateTime(timezone=False), server_default=func.now())
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     entry_number = Column(String, index=True, nullable=False)
     pro = Column(String, nullable=True)
     ppo_cpo = Column(String, nullable=True)
@@ -91,7 +91,7 @@ class Victim_Details(Base):
     __tablename__ = 'victim_details'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = Column(DateTime(timezone=False), server_default=func.now())
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     # entry_number = Column(String, index=True)
     entry_number = Column(String, ForeignKey('case_details.entry_number'), index=True)
     pro = Column(String)
@@ -116,7 +116,7 @@ class Suspect_Details(Base):
     __tablename__ = 'suspect_details'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = Column(DateTime(timezone=False), server_default=func.now())
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     # entry_number = Column(String, index=True)
     entry_number = Column(String, ForeignKey('case_details.entry_number'), index=True)
     pro = Column(String)

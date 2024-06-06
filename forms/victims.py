@@ -133,7 +133,7 @@ def addVictim(mps_cps,ppo_cpo,pro):
             user_friendly_field = field_name_mapping.get(field, field)
             st.error(f"Error in {user_friendly_field}: {message}")
     finally:
-        st.write(victim_data)
+        # st.write(victim_data)
         if victim_data:
             return dict(victim_data)
 

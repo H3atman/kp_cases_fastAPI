@@ -117,6 +117,5 @@ def addSuspect(mps_cps,ppo_cpo,pro):
             user_friendly_field = field_name_mapping.get(field, field)
             st.error(f"Error in {user_friendly_field}: {message}")
     finally:
-        st.write(suspect_data)
         if suspect_data:
             return dict(suspect_data)

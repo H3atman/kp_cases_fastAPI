@@ -95,7 +95,7 @@ def case_Details(mps_cps,ppo_cpo,pro):
         return case_detail
     except ValidationError as e:
         st.error(e)
-    finally:
-        st.write(case_detail)
+    # finally:
+    #     st.write(case_detail)
 
     return case_detail

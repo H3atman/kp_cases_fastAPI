@@ -115,7 +115,7 @@ def addOffense():
             message = error['msg']
             user_friendly_field = field_name_mapping.get(field, field)
             st.error(f"Error in {user_friendly_field}: {message}")
-    finally:
-        st.write(offense_detail)
+    # finally:
+    #     st.write(offense_detail)
 
     return offense_detail

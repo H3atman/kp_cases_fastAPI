@@ -1,9 +1,6 @@
 fastapi==0.111.0
-pandas==2.2.2
 pydantic==2.7.3
-Requests==2.32.3
-streamlit==1.35.0
-streamlit_authenticator==0.3.2
+streamlit
+streamlit_authenticator
 psycopg2-binary==2.9.9
 sqlalchemy==2.0.30
-bcrypt==4.1.3

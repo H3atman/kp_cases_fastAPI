@@ -354,7 +354,7 @@ def get_cases(mps_cps: str, db: Session = Depends(get_db)):
         .outerjoin(victim_subquery, models.CaseDetails.entry_number == victim_subquery.c.entry_number)
         .outerjoin(suspect_subquery, models.CaseDetails.entry_number == suspect_subquery.c.entry_number)
         .filter(models.CaseDetails.mps_cps == mps_cps)  # Filtering based on mps_cps
-        .order_by(models.CaseDetails.created_at.desc())
+        .order_by(models.CaseDetails.date_econded.desc())
     )
 
     # Execute the query
@@ -406,7 +406,7 @@ async def check_entry(entry_number: str, db: Session = Depends(get_db)):
 # FastAPI endpoint to get the next entry number based on mps_cps
 @app.get("/next_entry_number/{mps_cps}")
 async def get_next_entry_number(mps_cps: str, db: Session = Depends(get_db)):
-    latest_entry = db.query(models.CaseDetails).filter(models.CaseDetails.mps_cps == mps_cps).order_by(models.CaseDetails.created_at.desc()).first()
+    latest_entry = db.query(models.CaseDetails).filter(models.CaseDetails.mps_cps == mps_cps).order_by(models.CaseDetails.date_econded.desc()).first()
     if not latest_entry:
         raise HTTPException(status_code=404, detail="No entries found for this mps_cps")
     

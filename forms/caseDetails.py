@@ -67,6 +67,9 @@ def case_Details(mps_cps,ppo_cpo,pro):
 
     # Create a directory of data
     data = {
+        "pro": pro,
+        "ppo_cpo": ppo_cpo,
+        "mps_cps": mps_cps,
         "det_narrative": det_narrative,
         "dt_reported": dt_reported,
         "time_reported": st.session_state.input_time_reported,

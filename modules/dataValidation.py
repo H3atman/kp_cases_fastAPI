@@ -85,9 +85,9 @@ class SuspectData_Validation(BaseModel):
 
 # Pydantic model for case details validation
 class Case_Detail_Validation(BaseModel):
-    pro: str
-    ppo_cpo: str
-    mps_cps: str
+    pro: Optional[str]
+    ppo_cpo: Optional[str]
+    mps_cps: Optional[str]
     det_narrative: Optional[str] = Field(None, description="Narrative description of the case")
     dt_reported: date = Field(..., description="Date Reported")
     time_reported: Optional[time]

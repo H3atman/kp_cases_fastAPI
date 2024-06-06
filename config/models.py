@@ -77,7 +77,7 @@ class CaseDetails(Base):
     offense_class = Column(String, nullable=False)
     case_status = Column(String, nullable=False)
     check = Column(Boolean, nullable=False)
-    narrative = Column(String, nullable=False)
+    narrative = Column(String, nullable=True)
     date_reported = Column(Date, nullable=False)
     time_reported = Column(Time, nullable=True)
     date_committed = Column(Date, nullable=True)

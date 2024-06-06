@@ -6,6 +6,7 @@ from forms import offenses, victims, suspects, caseDetails
 from modules.newEntry_functions import *
 from pydantic import ValidationError
 import concurrent.futures
+from config.database import api_endpoint
 
 
 def process_offense(offense, offense_class, otherOffense, case_status, check):
@@ -20,7 +21,7 @@ def process_offense(offense, offense_class, otherOffense, case_status, check):
     }
 
 # Define the FastAPI base URL
-API_URL = "http://127.0.0.1:8000"
+API_URL = api_endpoint
 
 @st.cache_data(ttl="60m")
 def fetch_combined_value_and_id(api_url):

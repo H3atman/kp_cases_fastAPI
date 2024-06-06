@@ -4,10 +4,10 @@ import pandas as pd
 import streamlit as st
 import json
 
-def encoded_data():
+def encoded_data(mps_cps: str):
     try:
-        # Make a GET request to the API endpoint
-        response = requests.get(f"{api_endpoint}/cases")
+        # Make a GET request to the API endpoint with the mps_cps parameter
+        response = requests.get(f"{api_endpoint}/cases", params={"mps_cps": mps_cps})
 
         # Check if the response status code is 200 (OK)
         if response.status_code == 200:
@@ -19,12 +19,12 @@ def encoded_data():
                 return
 
             # Print the data variable to see what it contains
-            print(data)
+            # print(data)
 
             # Convert the JSON data to a DataFrame
             df = pd.DataFrame(data)
 
-            # Set the index to the entry_number column
+            # Set the index to the entry_number column if needed
             # df = df.set_index("Entry Number")
 
             # Display the DataFrame in a Streamlit table
@@ -37,5 +37,5 @@ def encoded_data():
         st.error(f"Request failed: {e}")
         print(f"Request failed: {e}")
 
-# Call the function to execute the code
-encoded_data()
+# # Call the function to execute the code
+# encoded_data()

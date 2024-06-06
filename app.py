@@ -41,10 +41,11 @@ if st.session_state["authentication_status"]:
     with tab1:
         st.subheader("New Entry")
         entryCode = newEntry(mps_cps)
+        
 
     with tab2:
         st.subheader("Show Encoded Data")
-        encoded_data()
+        encoded_data(mps_cps)
 
 
     with tab3:

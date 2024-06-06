@@ -2,11 +2,13 @@ import streamlit as st
 import requests
 from pydantic import ValidationError
 from modules.dataValidation import SuspectData_Validation
+from config.database import api_endpoint
+
 
 @st.cache_data(ttl=1800)  # Cache data for 30 minutes
 def get_brgy_city_mun(mps_cps):
     # Make a GET request to the FastAPI endpoint
-    response = requests.get(f"http://localhost:8000/brgy-city-mun/{mps_cps}")
+    response = requests.get(f"{api_endpoint}/brgy-city-mun/{mps_cps}")
 
     # Parse the JSON response
     data = response.json()

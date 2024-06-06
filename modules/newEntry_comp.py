@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import date
 import requests
+from config.database import api_endpoint
 
 # Fomat the dates
 def dateseq():
@@ -16,7 +17,7 @@ def dateseq():
 st.cache_data(ttl="60m")
 def fetch_seq_by_mps_cps(mps_cps):
     try:
-        response = requests.get(f"http://127.0.0.1:8000/stations/{mps_cps}")
+        response = requests.get(f"{api_endpoint}/stations/{mps_cps}")
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -24,9 +25,14 @@ def fetch_seq_by_mps_cps(mps_cps):
         return []
 
 # Function to get the next entry number (placeholder)
-def get_next_entry_number():
-    # Placeholder implementation for demonstration purposes
-    return 1
+def get_next_entry_number(mps_cps):
+    try:
+        response = requests.get(f"{api_endpoint}/next_entry_number/{mps_cps}")
+        response.raise_for_status()
+        return response.json()["next_entry_number"]
+    except requests.exceptions.RequestException as e:
+        # st.error(f"Error fetching the next entry number: {e}")
+        return 1
 
 
 
@@ -61,7 +67,7 @@ def newEntry(mps_cps):
                                            step=1, min_value=202101, max_value=202412)
 
     # Auto-suggest for the next entry number
-    next_value = get_next_entry_number()
+    next_value = get_next_entry_number(mps_cps)
     entryNum_value = entryNum.number_input("Entry Number", step=1, min_value=1, value=next_value)
 
     combined_value = f"{entrySeq_value}-{dateMon_value}-{monthRep_value}-{entryNum_value}"
@@ -70,10 +76,19 @@ def newEntry(mps_cps):
     st.session_state.combined_value = combined_value
 
     if st.button("New Entry", type="primary", use_container_width=True):
-        response = requests.post(f"http://127.0.0.1:8000/temp-entries/", json={"combined_value": st.session_state.combined_value})
+        # Check if the entry number already exists
+        response = requests.get(f"{api_endpoint}/check_entry/{combined_value}")
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("exists"):
+                st.error(f"Entry number {combined_value} already exists.")
+                return
+        
+        # If the entry number does not exist, proceed with creating a new entry
+        response = requests.post(f"{api_endpoint}/temp-entries/", json={"combined_value": st.session_state.combined_value})
         if response.status_code == 200:
             st.session_state.temp_entry_id = response.json()["id"]
-            print(st.session_state.combined_value)
+            # print(st.session_state.combined_value)
             st.switch_page("pages/entry_form.py")
         else:
             st.error("Failed to store the entry")

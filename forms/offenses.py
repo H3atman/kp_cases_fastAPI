@@ -2,13 +2,15 @@ import streamlit as st
 import requests
 from modules.dataValidation import Offense_Validation
 from pydantic import ValidationError
+from config.database import api_endpoint
+
 
 
 # Cache data for 30 minutes
 @st.cache_data(ttl=1800)
 def get_offense_classifications():
     # Make a GET request to the FastAPI endpoint
-    response = requests.get("http://localhost:8000/offense_classifications")
+    response = requests.get(f"{api_endpoint}/offense_classifications")
     response.raise_for_status()  # Ensure we handle HTTP errors
 
     # Parse the JSON response

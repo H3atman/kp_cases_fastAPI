@@ -2,10 +2,12 @@ import requests
 from fastapi import HTTPException
 import streamlit as st
 import streamlit_authenticator as stauth
+from config.database import api_endpoint
+
 
 @st.cache_data(ttl="60m")
 def fetch_users():
-    response = requests.get("http://localhost:8000/users/")
+    response = requests.get(f"{api_endpoint}/users/")
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail="Failed to fetch users")
     return response.json()

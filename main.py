@@ -299,7 +299,7 @@ async def enter_victim(suspect: dv.New_Entry_SuspectData_Validation, db: Session
 
 
 @app.get('/cases')
-def get_cases(db: Session = Depends(get_db)):
+def get_cases(mps_cps: str, db: Session = Depends(get_db)):
     # Aliases for Victim_Details and Suspect_Details for aggregation
     victims_alias = aliased(models.Victim_Details)
     suspects_alias = aliased(models.Suspect_Details)
@@ -316,6 +316,7 @@ def get_cases(db: Session = Depends(get_db)):
                 ), '; '
             ).label('victim_details')
         )
+        .filter(victims_alias.mps_cps == mps_cps)  # Filtering based on mps_cps
         .group_by(victims_alias.entry_number)
         .subquery()
     )
@@ -332,6 +333,7 @@ def get_cases(db: Session = Depends(get_db)):
                 ), '; '
             ).label('suspect_details')
         )
+        .filter(suspects_alias.mps_cps == mps_cps)  # Filtering based on mps_cps
         .group_by(suspects_alias.entry_number)
         .subquery()
     )
@@ -351,6 +353,8 @@ def get_cases(db: Session = Depends(get_db)):
         )
         .outerjoin(victim_subquery, models.CaseDetails.entry_number == victim_subquery.c.entry_number)
         .outerjoin(suspect_subquery, models.CaseDetails.entry_number == suspect_subquery.c.entry_number)
+        .filter(models.CaseDetails.mps_cps == mps_cps)  # Filtering based on mps_cps
+        .order_by(models.CaseDetails.created_at.desc())
     )
 
     # Execute the query
@@ -388,3 +392,24 @@ def get_cases(db: Session = Depends(get_db)):
 
     # Return the DataFrame as a JSON response
     return df
+
+
+@app.get("/check_entry/{entry_number}")
+async def check_entry(entry_number: str, db: Session = Depends(get_db)):
+    result = db.execute(select(models.CaseDetails).where(models.CaseDetails.entry_number == entry_number)).first()
+    if result:
+        return {"exists": True}
+    else:
+        return {"exists": False}
+    
+
+# FastAPI endpoint to get the next entry number based on mps_cps
+@app.get("/next_entry_number/{mps_cps}")
+async def get_next_entry_number(mps_cps: str, db: Session = Depends(get_db)):
+    latest_entry = db.query(models.CaseDetails).filter(models.CaseDetails.mps_cps == mps_cps).order_by(models.CaseDetails.created_at.desc()).first()
+    if not latest_entry:
+        raise HTTPException(status_code=404, detail="No entries found for this mps_cps")
+    
+    latest_entry_number = int(latest_entry.entry_number.split('-')[-1])
+    next_entry_number = latest_entry_number + 1
+    return {"next_entry_number": next_entry_number}

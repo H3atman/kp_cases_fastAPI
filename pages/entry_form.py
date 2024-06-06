@@ -158,6 +158,8 @@ def entryForm():
                     except Exception as e:
                         show_error(f"An error occurred: {e}")
             #  Delete temp-entry and go back to main page
+            st.success(f"Entry Number {combined_value} succesfuly submitted")
+            sleep(3)
             requests.delete(f"{API_URL}/temp-entries/{entry_id}")
             st.switch_page('app.py')
 

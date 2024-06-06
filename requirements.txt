@@ -6,4 +6,4 @@ Requests==2.32.3
 SQLAlchemy==2.0.30
 streamlit==1.35.0
 streamlit_authenticator==0.3.2
-psycopg2
+psycopg2==2.9.9

@@ -28,7 +28,7 @@ def encoded_data(mps_cps: str):
             # df = df.set_index("Entry Number")
 
             # Display the DataFrame in a Streamlit table
-            st.table(df)
+            st.dataframe(df)
         else:
             st.error(f"Error: Received status code {response.status_code}")
             print(f"Error: Received status code {response.status_code}")

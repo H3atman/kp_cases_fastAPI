@@ -66,6 +66,7 @@ class Offense(Base):
 
 class CaseDetails(Base):
     __tablename__ = 'case_details'
+    __table_args__ = {'extend_existing': True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     date_encoded = Column(TIMESTAMP(timezone=True), server_default=func.now())
@@ -89,6 +90,7 @@ class CaseDetails(Base):
 
 class Victim_Details(Base):
     __tablename__ = 'victim_details'
+    __table_args__ = {'extend_existing': True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     date_encoded = Column(TIMESTAMP(timezone=True), server_default=func.now())
@@ -114,6 +116,7 @@ class Victim_Details(Base):
 
 class Suspect_Details(Base):
     __tablename__ = 'suspect_details'
+    __table_args__ = {'extend_existing': True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     date_encoded = Column(TIMESTAMP(timezone=True), server_default=func.now())

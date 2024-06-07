@@ -413,3 +413,12 @@ async def get_next_entry_number(mps_cps: str, db: Session = Depends(get_db)):
     latest_entry_number = int(latest_entry.entry_number.split('-')[-1])
     next_entry_number = latest_entry_number + 1
     return {"next_entry_number": next_entry_number}
+
+
+@app.get('/search_case')
+async def get_cases(entry_number: str, mps_cps: str, db: Session = Depends(get_db)):
+    cases = db.query(models.CaseDetails).filter(models.CaseDetails.entry_number.like(f"%{entry_number}%"), models.CaseDetails.mps_cps == mps_cps).all()
+    if not cases:
+        raise HTTPException(status_code=404, detail="Cases not found")
+    return cases
+

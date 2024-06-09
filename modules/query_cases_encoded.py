@@ -2,10 +2,14 @@ import streamlit as st
 from config.database import api_endpoint
 import requests
 from datetime import datetime
-
-def container(entry_number, station, offense, date_encoded):
+# def container(entry_number, station, offense, date_encoded):
+def container():
     with st.container(border=True):
-        st.write(entry_number)
+        entry_number = "Test"
+        offense = "Test"
+        date_encoded = "Test"
+        station = "Test"
+        st.write(f"<h3>{entry_number}</h3>",unsafe_allow_html=True)
         st.write(station)
         st.write(offense)
         st.write(date_encoded)
@@ -33,6 +37,7 @@ def search_cases(mps_cps):
                 st.error(f"An error occurred: {response.status_code}")
         else:
             st.warning("Please enter an entry number")
+    container()
 
 # Assuming you provide mps_cps as an argument or set it somewhere
 # search_cases()

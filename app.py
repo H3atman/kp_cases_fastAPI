@@ -49,7 +49,7 @@ if st.session_state["authentication_status"]:
 
 
     with tab3:
-        st.subheader("You can search edit you entries here")
+        st.subheader("You can search and edit you entries here")
         search_cases(mps_cps)
 
 
@@ -62,5 +62,3 @@ elif st.session_state["authentication_status"] is False:
 
 elif st.session_state["authentication_status"] is None:
     st.warning('Please enter your username and password')
-
-

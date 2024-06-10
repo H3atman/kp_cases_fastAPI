@@ -415,12 +415,101 @@ async def get_next_entry_number(mps_cps: str, db: Session = Depends(get_db)):
     return {"next_entry_number": next_entry_number}
 
 
+# @app.get('/search_case')
+# async def get_cases(entry_number: str, mps_cps: str, db: Session = Depends(get_db)):
+#     cases = db.query(models.CaseDetails).filter(models.CaseDetails.entry_number.like(f"%{entry_number}%"), models.CaseDetails.mps_cps == mps_cps).all()
+#     if not cases:
+#         raise HTTPException(status_code=404, detail="Cases not found")
+#     return cases
+
 @app.get('/search_case')
 async def get_cases(entry_number: str, mps_cps: str, db: Session = Depends(get_db)):
-    cases = db.query(models.CaseDetails).filter(models.CaseDetails.entry_number.like(f"%{entry_number}%"), models.CaseDetails.mps_cps == mps_cps).all()
+    # Aliases for Victim_Details and Suspect_Details for aggregation
+    victims_alias = aliased(models.Victim_Details)
+    suspects_alias = aliased(models.Suspect_Details)
+
+    # Subquery to aggregate victim details
+    victim_subquery = (
+        select(
+            victims_alias.entry_number,
+            func.string_agg(
+                func.concat(
+                    victims_alias.vic_fname, ' ', victims_alias.vic_midname, ' ',
+                    victims_alias.vic_lname, ' ', victims_alias.vic_qlfr, ' ',
+                    victims_alias.vic_alias, ' (', victims_alias.vic_age, '/', victims_alias.vic_gndr, ')'
+                ), '; '
+            ).label('victim_details')
+        )
+        .filter(victims_alias.mps_cps == mps_cps)  # Filtering based on mps_cps
+        .group_by(victims_alias.entry_number)
+        .subquery()
+    )
+
+    # Subquery to aggregate suspect details
+    suspect_subquery = (
+        select(
+            suspects_alias.entry_number,
+            func.string_agg(
+                func.concat(
+                    suspects_alias.sus_fname, ' ', suspects_alias.sus_midname, ' ',
+                    suspects_alias.sus_lname, ' ', suspects_alias.sus_qlfr, ' ',
+                    suspects_alias.sus_alias, ' (', suspects_alias.sus_age, '/', suspects_alias.sus_gndr, ')'
+                ), '; '
+            ).label('suspect_details')
+        )
+        .filter(suspects_alias.mps_cps == mps_cps)  # Filtering based on mps_cps
+        .group_by(suspects_alias.entry_number)
+        .subquery()
+    )
+
+    # Main query to select case details and join with victim and suspect details
+    query = (
+        select(
+            models.CaseDetails.entry_number,
+            models.CaseDetails.mps_cps,
+            models.CaseDetails.offense,
+            models.CaseDetails.case_status,
+            models.CaseDetails.date_reported,
+            models.CaseDetails.time_reported,
+            models.CaseDetails.date_committed,
+            models.CaseDetails.time_committed,
+            models.CaseDetails.date_encoded,
+            victim_subquery.c.victim_details,
+            suspect_subquery.c.suspect_details
+        )
+        .outerjoin(victim_subquery, models.CaseDetails.entry_number == victim_subquery.c.entry_number)
+        .outerjoin(suspect_subquery, models.CaseDetails.entry_number == suspect_subquery.c.entry_number)
+        .filter(models.CaseDetails.entry_number.like(f"%{entry_number}%"), models.CaseDetails.mps_cps == mps_cps)  # Filtering based on entry_number and mps_cps
+        .order_by(models.CaseDetails.date_encoded.desc())
+    )
+
+    # Execute the query
+    result = db.execute(query)
+    cases = result.fetchall()
+
     if not cases:
         raise HTTPException(status_code=404, detail="Cases not found")
-    return cases
+
+    # Optionally, convert the result to a list of dictionaries
+    cases_list = [
+        {
+            'entry_number': case.entry_number,
+            'mps_cps': case.mps_cps,
+            'offense': case.offense,
+            'date_encoded': case.date_encoded,
+            'case_status': case.case_status,
+            'date_reported': case.date_reported,
+            'time_reported': case.time_reported,
+            'date_committed': case.date_committed,
+            'time_committed': case.time_committed,
+            'victim_details': case.victim_details,
+            'suspect_details': case.suspect_details,
+        }
+        for case in cases
+    ]
+
+    return cases_list
+
 
 @app.get('/count_cases_encoded')
 async def get_cases_count(mps_cps: str, db: Session = Depends(get_db)):

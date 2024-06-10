@@ -175,5 +175,3 @@ def entryForm():
 
 # Call the entryForm function
 entryForm()
-
-

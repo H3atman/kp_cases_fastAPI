@@ -42,6 +42,13 @@ class TempEntry(Base):
     combined_value = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+class TempEditEntry(Base):
+    __tablename__ = 'temp_edit_entries'
+
+    id = Column(Integer, primary_key=True, index=True)
+    entry_number = Column(String)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 class Province_Brgy_Details(Base):
     __tablename__ = 'regionxii_brgy'
     __table_args__ = {'extend_existing': True}

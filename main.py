@@ -58,6 +58,23 @@ class TempEntryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+# Pydantic model for TempEntry
+
+
+
+# Pydantic model for TempEntry for Editing
+class TempEntryEdit(BaseModel):
+    entry_number: str
+
+class TempEntryEditResponse(BaseModel):
+    id: int
+    entry_number: str
+
+    class Config:
+        from_attributes = True
+# Pydantic model for TempEntry for Editing
+
+
 
 class Brgy_Value(BaseModel):
     id: int
@@ -517,8 +534,33 @@ async def get_cases_count(mps_cps: str, db: Session = Depends(get_db)):
     return {"count": count}
 
 @app.get('/get_victim_details')
-async def get_cases(entry_number: str, mps_cps: str, db: Session = Depends(get_db)):
-    cases = db.query(models.Victim_Details).filter(models.Victim_Details.entry_number == entry_number, models.Victim_Details.mps_cps == mps_cps).all()
+async def get_victim_details(entry_number: str, db: Session = Depends(get_db)):
+    cases = db.query(models.Victim_Details).filter(models.Victim_Details.entry_number == entry_number).all()
     if not cases:
         raise HTTPException(status_code=404, detail="Cases not found")
     return cases
+
+
+# Endpoint to store a new temp entry
+@app.post("/temp-edit-entries/", response_model=TempEntryEditResponse)
+async def create_edit_temp_entry(entry: TempEntryEdit, db: Session = Depends(get_db)):
+    db_entry = models.TempEditEntry(entry_number=entry.entry_number)
+    db.add(db_entry)
+    db.commit()
+    db.refresh(db_entry)
+    return db_entry
+
+# Endpoint to delete a temp entry
+@app.delete("/temp-edit-entries/{entry_id}", response_model=TempEntryEditResponse)
+async def delete_edit_temp_entry(entry_id: int, db: Session = Depends(get_db)):
+    db_entry = db.query(models.TempEditEntry).filter(models.TempEditEntry.id == entry_id).first()
+    if db_entry is None:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    db.delete(db_entry)
+    db.commit()
+    return db_entry
+
+# Endpoint to get all temp entries (optional, for debugging)
+@app.get("/temp-edit-entries/", response_model=List[TempEntryEditResponse])
+async def get__edit_temp_entries(db: Session = Depends(get_db)):
+    return db.query(models.TempEditEntry).all()

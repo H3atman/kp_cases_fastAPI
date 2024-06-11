@@ -7,6 +7,7 @@ from time import sleep
 def search_cases(mps_cps):
     entry_search = st.text_input("Input Entry Number")
     if st.button("Search Entry", use_container_width=True, type="primary", key="search_button"):
+        st.session_state.clear
         if entry_search:
             response = requests.get(f"{api_endpoint}/search_case", params={"entry_number": entry_search, "mps_cps": mps_cps})
             
@@ -47,6 +48,7 @@ def display_cases():
                     if response.status_code == 200:
                         st.session_state.current_entry_number = response.json()["id"]
                         # print(st.session_state.combined_value)
+                        st.cache_data.clear
                         st.switch_page("pages/edit_form.py")
                         # st.switch_page("pages/entry_form.py")
                     else:

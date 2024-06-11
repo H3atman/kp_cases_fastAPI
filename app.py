@@ -3,7 +3,6 @@ from modules.newEntry_comp import newEntry
 from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator
 from modules.encoded_data import encoded_data
 from modules.query_cases_encoded import search_cases, display_cases
-from pages.edit_form import edit_form  # Import the edit form function
 
 # Set page configuration
 st.set_page_config(page_title="KP Cases Dashboard")
@@ -59,11 +58,6 @@ if st.session_state["authentication_status"]:
         with tab4:
             st.subheader("You can change your password here")
             st.write(":red[Under Development]")
-
-    elif st.session_state.page == "edit":
-        entry_number = st.session_state.entry_number
-        mps_cps = st.session_state.mps_cps
-        edit_form(entry_number, mps_cps)
 
 elif st.session_state["authentication_status"] is False:
     st.error('Username/password is incorrect')

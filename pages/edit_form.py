@@ -3,8 +3,8 @@ import streamlit as st
 from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator
 import requests
 from edit_data_forms import edit_caseDetails, edit_offenses, edit_suspects, edit_victims
-# from modules.newEntry_functions import *
 from config.database import api_endpoint
+from modules.get_data import get_victim_data
 
 
 def process_offense(offense, offense_class, otherOffense, case_status, check):
@@ -85,8 +85,11 @@ def editForm():
 
         if st.button("Home"):
             if entry_id is not None:
-                requests.delete(f"{API_URL}get_entry_number{entry_id}")
+                requests.delete(f"{API_URL}/temp-edit-entries/{entry_id}")
+            st.cache_data.clear()
+            st.session_state.clear()
             st.switch_page('app.py')
+            
 
         username = st.session_state['username']
         user_info = credentials["usernames"].get(username, {})
@@ -104,10 +107,9 @@ def editForm():
 
         with complainant:
             st.subheader("Victims's Profile")
-            response = requests.get(f"{api_endpoint}/get_victim_details/{entry_number}")
-            # GET THE WHOLE DATA FROM THE RESPONSE ABOVE IN JSON FORMAT THEN PASS IT TO THE editVictim FUNCTION IF POSSIBLE
-
-            victim_data = edit_victims.editVictim(mps_cps,ppo_cpo,pro)
+            # Query the victims data and return the nessesary variables
+            vicdetails = get_victim_data(entry_number)
+            victim_data = edit_victims.editVictim(vicdetails)
 
 
         with suspect:

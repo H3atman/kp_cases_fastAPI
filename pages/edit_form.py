@@ -3,8 +3,10 @@ import streamlit as st
 from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator
 import requests
 from edit_data_forms import edit_caseDetails, edit_offenses, edit_suspects, edit_victims
+from modules.updateEntry_functions import *
 from config.database import api_endpoint
 from modules.get_data import get_victim_data, get_suspect_data, get_case_data
+import concurrent.futures
 
 
 def process_offense(offense, offense_class, otherOffense, case_status, check):
@@ -50,7 +52,7 @@ def show_error(message):
 def editForm():
 
     # Set page configuration
-    # st.set_page_config(page_title="KP Cases Detailed Entry")
+    # st.set_page_config(page_title="Edit KP Cases Detailed Entry")
 
     # Hide the sidebar with custom CSS
     hide_sidebar_css = '''
@@ -100,7 +102,7 @@ def editForm():
         #====================================
         # Display entry form
         #====================================
-        st.title(':blue-background[Edit] Katarungang Pambarangay Cases Detailed Report')
+        st.title(':blue-background[Update] Katarungang Pambarangay Cases Detailed Report')
         st.text_input("Entry Number", value=entry_number, disabled=True)
 
         complainant, suspect, caseDetail, offense = st.tabs(["Complainant / Victim's Profile", "Suspect/s Profile", "Case Detail", "Offense"])
@@ -128,41 +130,43 @@ def editForm():
             offense_detail = edit_offenses.editOffense(casedata)
 
 
-    # # Check completeness of case detail and offense detail
-    # case_detail_complete = case_detail is not None and offense_detail is not None and hasattr(offense_detail, 'offense')
-    # if not case_detail_complete:
-    #     show_error("Please Complete the Required Entries in Case Detail and Offense Tab")
+    # Check completeness of case detail and offense detail
+    case_detail_complete = case_detail is not None and offense_detail is not None and hasattr(offense_detail, 'offense')
+    if not case_detail_complete:
+        show_error("Please Complete the Required Entries in Case Detail and Offense Tab")
 
-    # # Check completeness of victim data
-    # victim_data_complete = victim_data is not None
-    # if not victim_data_complete:
-    #     show_error("Please Complete the Required Entries in Victim's Profile Tab")
+    # Check completeness of victim data
+    victim_data_complete = victim_data is not None
+    if not victim_data_complete:
+        show_error("Please Complete the Required Entries in Victim's Profile Tab")
 
-    # # Check completeness of suspect data
-    # suspect_data_complete = suspect_data is not None
-    # if not suspect_data_complete:
-    #     show_error("Please Complete the Required Entries in Suspect's Profile Tab")
+    # Check completeness of suspect data
+    suspect_data_complete = suspect_data is not None
+    if not suspect_data_complete:
+        show_error("Please Complete the Required Entries in Suspect's Profile Tab")
 
-    # # Add submit button if all required data is complete
-    # if case_detail_complete and victim_data_complete and suspect_data_complete:
-    #     if st.button("Submit Entry", type="primary", use_container_width=True):
-    #         with concurrent.futures.ThreadPoolExecutor() as executor:
-    #             futures = []
-    #             futures.append(executor.submit(dataEntry_caseDetails, combined_value, case_detail, offense_detail, API_URL))
-    #             futures.append(executor.submit(dataEntry_victimDetails, combined_value, victim_data, API_URL))
-    #             futures.append(executor.submit(dataEntry_suspectDetails, combined_value, suspect_data, API_URL))
+    # Add submit button if all required data is complete
+    if case_detail_complete and victim_data_complete and suspect_data_complete:
+        if st.button("Update Entry", type="primary", use_container_width=True):
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = []
+                futures.append(executor.submit(update_case_details, entry_number, case_detail, offense_detail, API_URL))
+                futures.append(executor.submit(update_victim_details, entry_number, victim_data, API_URL))
+                futures.append(executor.submit(update_suspect_details, entry_number, suspect_data, API_URL))
 
-    #             # Wait for all futures to complete
-    #             for future in concurrent.futures.as_completed(futures):
-    #                 try:
-    #                     future.result()  # Get the result to raise any exceptions
-    #                 except Exception as e:
-    #                     show_error(f"An error occurred: {e}")
-    #         #  Delete temp-entry and go back to main page
-    #         st.success(f"Entry Number {combined_value} succesfuly submitted")
-    #         sleep(3)
-    #         requests.delete(f"{API_URL}/temp-entries/{entry_id}")
-    #         st.switch_page('app.py')
+                # Wait for all futures to complete
+                for future in concurrent.futures.as_completed(futures):
+                    try:
+                        future.result()  # Get the result to raise any exceptions
+                    except Exception as e:
+                        show_error(f"An error occurred: {e}")
+            #  Delete temp-entry and go back to main page
+            st.warning(f"Entry Number {entry_number} succesfuly updated")
+            sleep(3)
+            requests.delete(f"{API_URL}/temp-edit-entries/{entry_id}")
+            st.session_state.clear()
+            st.cache_data.clear()
+            st.switch_page('app.py')
 
 
 

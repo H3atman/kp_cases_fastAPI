@@ -9,7 +9,7 @@ from config.database import api_endpoint
 # -First Name, Middle Name, Last Name alias and Qualifier
 def process_victim_names(vicfname, vicmidname, viclastname, vicalias):
     # List of terms to replace with None
-    terms_to_replace = ["Unidentified", "Unknown", "alias Unknown"]
+    terms_to_replace = ["Unidentified", "Unknown"]
     
     # Function to check and replace terms
     def check_and_replace(name):
@@ -21,10 +21,13 @@ def process_victim_names(vicfname, vicmidname, viclastname, vicalias):
     vicfname = check_and_replace(vicfname)
     vicmidname = check_and_replace(vicmidname)
     viclastname = check_and_replace(viclastname)
-    vicalias = check_and_replace(vicalias)
+    
+    # Process vicalias
+    if vicalias:
+        vicalias = vicalias.replace("alias", "").strip()
+        vicalias = check_and_replace(vicalias)
     
     return vicfname, vicmidname, viclastname, vicalias
-
 
 
 @st.cache_data(ttl=1800)  # Cache data for 30 minutes

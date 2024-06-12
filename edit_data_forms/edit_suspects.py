@@ -6,10 +6,11 @@ from config.database import api_endpoint
 
 
 # Process Unidentified and Unknown Entries
-# -First Name, Middle Name, Last Name alias and Qualifier
+# -First Name, Middle Name, Last Name alias and Qualifies
+
 def process_suspect_names(susfname, susmidname, suslastname, susalias):
     # List of terms to replace with None
-    terms_to_replace = ["Unidentified", "Unknown", "alias Unknown"]
+    terms_to_replace = ["Unidentified", "Unknown"]
     
     # Function to check and replace terms
     def check_and_replace(name):
@@ -21,7 +22,11 @@ def process_suspect_names(susfname, susmidname, suslastname, susalias):
     susfname = check_and_replace(susfname)
     susmidname = check_and_replace(susmidname)
     suslastname = check_and_replace(suslastname)
-    susalias = check_and_replace(susalias)
+    
+    # Process vicalias
+    if susalias:
+        susalias = susalias.replace("alias", "").strip()
+        susalias = check_and_replace(susalias)
     
     return susfname, susmidname, suslastname, susalias
 
@@ -100,7 +105,7 @@ def editSuspect(susdetails):
     # Age Group
     ageGrp, age = st.columns(2)
     ageGrp.selectbox("Age Group",index=None,placeholder="Select Victims Age Group",options=("Infant (0-12 months)","Toddler (1-3 y/o)","Kid (4-9 y/o)","Preteen (10-12 y/o)","Teenager (13-18 y/o)","Young Adult (19-39 y/o)","Middle age Adult (40-64 y/o)","Old Age Adult (65 y/o-up)"),key="sus_ageGrp")
-    sus_age = age.number_input("Estimated or Exact Age",step=1,min_value=0,key="sus_age")
+    sus_age = age.number_input("Estimated or Exact Age",value=susdetails.get("sus_age"),step=1,key="sus_age")
 
     # Address - Region and Disttict/Province
     st.subheader("Suspect's Address")
@@ -118,7 +123,7 @@ def editSuspect(susdetails):
     brgy_index = get_brgy_index(sus_brgy_details, brgy_values)
     sus_brgy = brgy.selectbox("Barangay :red[#]",brgy_values,placeholder="Please select a Barangay",key="sus_abrgy",index=brgy_index)
 
-    sus_strName = st.text_input("House No./Street Name",key="sus_strName",value=susdetails.get("vic_strName"))
+    sus_strName = st.text_input("House No./Street Name",key="sus_strName",value=susdetails.get("sus_strName"))
 
 
     st.write("---")

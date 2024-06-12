@@ -1,7 +1,8 @@
 import streamlit as st
-from modules.newEntry_comp import newEntry  # Import custom component for new entries
-from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator  # Import authentication utilities
+from modules.newEntry_comp import newEntry
+from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator
 from modules.encoded_data import encoded_data
+from modules.query_cases_encoded import search_cases, display_cases
 
 # Set page configuration
 st.set_page_config(page_title="KP Cases Dashboard")
@@ -26,40 +27,40 @@ authenticator = initialize_authenticator(credentials)
 authenticator.login(fields={'Form name': 'PRO 12 KP Cases Details Encoding User\'s Login'})
 
 if st.session_state["authentication_status"]:
-    # If authenticated, store and retrieve username
     st.session_state['username'] = st.session_state["name"]
-    authenticator.logout()  # Provide logout functionality
+    authenticator.logout()
     username = st.session_state['username']
     user_info = credentials["usernames"].get(username, {})
     mps_cps = user_info.get("mps_cps", "")
     ppo_cpo = user_info.get("ppo_cpo", "")
     st.title(f'Welcome *{mps_cps}*, *{ppo_cpo}*')
 
-    # Create tabs for navigation
-    tab1, tab2, tab3, tab4 = st.tabs(["New Entry", "Encoded Data", "Search and Edit Entry" ,"Change Password"])
-    
-    with tab1:
-        st.subheader("New Entry")
-        entryCode = newEntry(mps_cps)
-        
+    # Manage navigation between pages
+    if "page" not in st.session_state:
+        st.session_state.page = "home"
 
-    with tab2:
-        st.subheader("Show Encoded Data")
-        encoded_data(mps_cps)
+    if st.session_state.page == "home":
+        # Create tabs for navigation
+        tab1, tab2, tab3, tab4 = st.tabs(["New Entry", "Encoded Data", "Search and Edit Entry", "Change Password"])
 
+        with tab1:
+            st.subheader("New Entry")
+            entryCode = newEntry(mps_cps)
 
-    with tab3:
-        st.subheader("You can edit you entries here")
-        st.write(":red[Under Development]")
+        with tab2:
+            encoded_data(mps_cps)
 
-    with tab4:
-        st.subheader("You can change your password here")
-        st.write(":red[Under Development]")
+        with tab3:
+            st.subheader("You can search and edit your entries here")
+            search_cases(mps_cps)
+            display_cases()
+
+        with tab4:
+            st.subheader("You can change your password here")
+            st.write(":red[Under Development]")
 
 elif st.session_state["authentication_status"] is False:
     st.error('Username/password is incorrect')
 
 elif st.session_state["authentication_status"] is None:
     st.warning('Please enter your username and password')
-
-

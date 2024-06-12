@@ -1,4 +1,6 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
+import logging
 from pydantic import BaseModel
 from typing import Annotated,  List, Optional
 from uuid import UUID
@@ -12,6 +14,7 @@ from modules import dataValidation as dv
 import pandas as pd
 from sqlalchemy.orm import aliased
 
+
 app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
 
@@ -23,6 +26,34 @@ def get_db():
         db.close()
 
 db_dependency = Annotated[Session, Depends(get_db)]
+
+
+# Error Logging
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"Request: {request.method} {request.url}")
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        logger.exception("Exception occurred while processing request")
+        response = JSONResponse(
+            status_code=500,
+            content={"message": "Internal Server Error"}
+        )
+    return response
+
+@app.exception_handler(422)
+async def validation_exception_handler(request: Request, exc):
+    logger.error(f"Validation error: {exc.errors()}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()}
+    )
 
 
 # ============================================
@@ -58,6 +89,23 @@ class TempEntryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+# Pydantic model for TempEntry
+
+
+
+# Pydantic model for TempEntry for Editing
+class TempEntryEdit(BaseModel):
+    entry_number: str
+
+class TempEntryEditResponse(BaseModel):
+    id: int
+    entry_number: str
+
+    class Config:
+        from_attributes = True
+# Pydantic model for TempEntry for Editing
+
+
 
 class Brgy_Value(BaseModel):
     id: int
@@ -295,6 +343,48 @@ async def enter_victim(suspect: dv.New_Entry_SuspectData_Validation, db: Session
     db.refresh(db_suspect)
     return db_suspect
 
+# UPDATE CASES IN THE DATABASE
+@app.put("/update-case-details/{entry_number}")
+async def update_case_details(entry_number: str, case_details: CaseDetailsModel, db: Session = Depends(get_db)):
+    db_case_details = db.query(models.CaseDetails).filter(models.CaseDetails.entry_number == entry_number).first()
+    if db_case_details is None:
+        raise HTTPException(status_code=404, detail="Case details not found")
+
+    for key, value in case_details.model_dump().items():
+        setattr(db_case_details, key, value)
+
+    db.commit()
+    db.refresh(db_case_details)
+
+    return db_case_details
+
+@app.put("/update-victim-details/{entry_number}")
+async def update_victim_details(entry_number: str, victim: dv.New_Entry_VictimData_Validation, db: Session = Depends(get_db)):
+    db_victim = db.query(models.Victim_Details).filter(models.Victim_Details.entry_number == entry_number).first()
+    if db_victim is None:
+        raise HTTPException(status_code=404, detail="Victim details not found")
+
+    for key, value in victim.model_dump().items():
+        setattr(db_victim, key, value)
+
+    db.commit()
+    db.refresh(db_victim)
+    
+    return db_victim
+
+@app.put("/update-suspect-details/{entry_number}")
+async def update_suspect_details(entry_number: str, suspect: dv.New_Entry_SuspectData_Validation, db: Session = Depends(get_db)):
+    db_suspect = db.query(models.Suspect_Details).filter(models.Suspect_Details.entry_number == entry_number).first()
+    if db_suspect is None:
+        raise HTTPException(status_code=404, detail="Suspect details not found")
+
+    for key, value in suspect.model_dump().items():
+        setattr(db_suspect, key, value)
+
+    db.commit()
+    db.refresh(db_suspect)
+    
+    return db_suspect
 
 
 
@@ -413,3 +503,147 @@ async def get_next_entry_number(mps_cps: str, db: Session = Depends(get_db)):
     latest_entry_number = int(latest_entry.entry_number.split('-')[-1])
     next_entry_number = latest_entry_number + 1
     return {"next_entry_number": next_entry_number}
+
+
+@app.get('/search_case')
+async def get_cases(entry_number: str, mps_cps: str, db: Session = Depends(get_db)):
+    # Aliases for Victim_Details and Suspect_Details for aggregation
+    victims_alias = aliased(models.Victim_Details)
+    suspects_alias = aliased(models.Suspect_Details)
+
+    # Subquery to aggregate victim details
+    victim_subquery = (
+        select(
+            victims_alias.entry_number,
+            func.string_agg(
+                func.concat(
+                    victims_alias.vic_fname, ' ', victims_alias.vic_midname, ' ',
+                    victims_alias.vic_lname, ' ', victims_alias.vic_qlfr, ' ',
+                    victims_alias.vic_alias, ' (', victims_alias.vic_age, '/', victims_alias.vic_gndr, ')'
+                ), '; '
+            ).label('victim_details')
+        )
+        .filter(victims_alias.mps_cps == mps_cps)  # Filtering based on mps_cps
+        .group_by(victims_alias.entry_number)
+        .subquery()
+    )
+
+    # Subquery to aggregate suspect details
+    suspect_subquery = (
+        select(
+            suspects_alias.entry_number,
+            func.string_agg(
+                func.concat(
+                    suspects_alias.sus_fname, ' ', suspects_alias.sus_midname, ' ',
+                    suspects_alias.sus_lname, ' ', suspects_alias.sus_qlfr, ' ',
+                    suspects_alias.sus_alias, ' (', suspects_alias.sus_age, '/', suspects_alias.sus_gndr, ')'
+                ), '; '
+            ).label('suspect_details')
+        )
+        .filter(suspects_alias.mps_cps == mps_cps)  # Filtering based on mps_cps
+        .group_by(suspects_alias.entry_number)
+        .subquery()
+    )
+
+    # Main query to select case details and join with victim and suspect details
+    query = (
+        select(
+            models.CaseDetails.entry_number,
+            models.CaseDetails.mps_cps,
+            models.CaseDetails.offense,
+            models.CaseDetails.case_status,
+            models.CaseDetails.date_reported,
+            models.CaseDetails.time_reported,
+            models.CaseDetails.date_committed,
+            models.CaseDetails.time_committed,
+            models.CaseDetails.date_encoded,
+            victim_subquery.c.victim_details,
+            suspect_subquery.c.suspect_details
+        )
+        .outerjoin(victim_subquery, models.CaseDetails.entry_number == victim_subquery.c.entry_number)
+        .outerjoin(suspect_subquery, models.CaseDetails.entry_number == suspect_subquery.c.entry_number)
+        .filter(models.CaseDetails.entry_number.like(f"%{entry_number}%"), models.CaseDetails.mps_cps == mps_cps)  # Filtering based on entry_number and mps_cps
+        .order_by(models.CaseDetails.date_encoded.desc())
+    )
+
+    # Execute the query
+    result = db.execute(query)
+    cases = result.fetchall()
+
+    if not cases:
+        raise HTTPException(status_code=404, detail="Cases not found")
+
+    # Optionally, convert the result to a list of dictionaries
+    cases_list = [
+        {
+            'entry_number': case.entry_number,
+            'mps_cps': case.mps_cps,
+            'offense': case.offense,
+            'date_encoded': case.date_encoded,
+            'case_status': case.case_status,
+            'date_reported': case.date_reported,
+            'time_reported': case.time_reported,
+            'date_committed': case.date_committed,
+            'time_committed': case.time_committed,
+            'victim_details': case.victim_details,
+            'suspect_details': case.suspect_details,
+        }
+        for case in cases
+    ]
+
+    return cases_list
+
+
+@app.get('/count_cases_encoded')
+async def get_cases_count(mps_cps: str, db: Session = Depends(get_db)):
+    count = db.query(models.CaseDetails).filter(models.CaseDetails.mps_cps == mps_cps).count()
+    return {"count": count}
+
+
+# Get Details for Editing Entries
+
+@app.get('/get_victim_details')
+async def get_victim_details(entry_number: str, db: Session = Depends(get_db)):
+    cases = db.query(models.Victim_Details).filter(models.Victim_Details.entry_number == entry_number).all()
+    if not cases:
+        raise HTTPException(status_code=404, detail="Cases not found")
+    return cases
+
+@app.get('/get_suspect_details')
+async def get_suspect_details(entry_number: str, db: Session = Depends(get_db)):
+    cases = db.query(models.Suspect_Details).filter(models.Suspect_Details.entry_number == entry_number).all()
+    if not cases:
+        raise HTTPException(status_code=404, detail="Cases not found")
+    return cases
+
+@app.get('/get_case_details')
+async def get_case_details(entry_number: str, db: Session = Depends(get_db)):
+    cases = db.query(models.CaseDetails).filter(models.CaseDetails.entry_number == entry_number).all()
+    if not cases:
+        raise HTTPException(status_code=404, detail="Cases not found")
+    return cases
+
+
+# Endpoint to store a new temp entry
+@app.post("/temp-edit-entries/", response_model=TempEntryEditResponse)
+async def create_edit_temp_entry(entry: TempEntryEdit, db: Session = Depends(get_db)):
+    db_entry = models.TempEditEntry(entry_number=entry.entry_number)
+    db.add(db_entry)
+    db.commit()
+    db.refresh(db_entry)
+    return db_entry
+
+# Endpoint to delete a temp entry
+@app.delete("/temp-edit-entries/{entry_id}", response_model=TempEntryEditResponse)
+async def delete_edit_temp_entry(entry_id: int, db: Session = Depends(get_db)):
+    db_entry = db.query(models.TempEditEntry).filter(models.TempEditEntry.id == entry_id).first()
+    if db_entry is None:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    db.delete(db_entry)
+    db.commit()
+    return db_entry
+
+# Endpoint to get all temp entries (optional, for debugging)
+@app.get("/temp-edit-entries/", response_model=List[TempEntryEditResponse])
+async def get__edit_temp_entries(db: Session = Depends(get_db)):
+    return db.query(models.TempEditEntry).all()

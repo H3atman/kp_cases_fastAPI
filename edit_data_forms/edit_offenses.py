@@ -4,7 +4,17 @@ from modules.dataValidation import Offense_Validation
 from pydantic import ValidationError
 from config.database import api_endpoint
 
+# Process Offense
+def get_offense_index(vicbrgydetails, brgy_values):
+    if vicbrgydetails in brgy_values:
+        return brgy_values.index(vicbrgydetails)
+    return None
 
+# Process Case Status
+def get_cases_status_index(caseStatus, case_status_values):
+    if caseStatus in case_status_values:
+        return case_status_values.index(caseStatus)
+    return None
 
 # Cache data for 30 minutes
 @st.cache_data(ttl=1800)
@@ -20,7 +30,7 @@ def get_offense_classifications():
 
 data = get_offense_classifications()
 
-def addOffense():
+def editOffense(casedata):
     # Initialize Offense Values
     offense_classifications = get_offense_classifications()
     offense_values = []
@@ -32,7 +42,9 @@ def addOffense():
             classifications.append(item['classification'])
 
     offenseType_placeholder = st.empty()
-    offenseType = offenseType_placeholder.selectbox("Select Offense :red[#]", offense_values, index=None)
+    get_offense = casedata.get("offense")
+    offense_index = get_offense_index(get_offense,offense_values)
+    offenseType = offenseType_placeholder.selectbox("Select Offense :red[#]", offense_values, index=offense_index)
     warning = st.empty()
     if offenseType is None:
         warning.warning("Please select an Offense")
@@ -49,7 +61,7 @@ def addOffense():
         offense_classification = offense_classification_placeholder.text_input("Offense Classification", classification, disabled=True)
 
     # Check if the Offense is not in the option
-    check = st.checkbox("Tick the checkbox for Other Cases not found in Select Offense Dropdown above")
+    check = st.checkbox("Tick the checkbox for Other Cases not found in Select Offense Dropdown above",value=casedata.get("check"))
 
     if not check:
         offense = offenseType
@@ -66,17 +78,22 @@ def addOffense():
     otherOffense = otherOffense_placeholder.text_input("Others, Please Specify :red[#]", value=None, help="Press Enter to confirm the Other KP Incident",disabled=True)
     if check:
         if otherOffense is None:
-            otherOffense= otherOffense_placeholder.text_input("Others, Please Specify :red[#]", help="Press Enter to confirm the Other KP Incident",key="test3")
+            otherOffense= otherOffense_placeholder.text_input("Others, Please Specify :red[#]", help="Press Enter to confirm the Other KP Incident",key="test3",value=casedata.get("offense"))
             if not otherOffense:
                 st.warning("Please Type the Other Offense")
         else:
             otherOffense = otherOffense_placeholder.text_input("Others, Please Specify :red[#]", help="Press Enter to confirm the Other KP Incident",disabled=True,key="test4")
 
+
+
     st.subheader("Case Status")
+    case_status_values = ["For Conciliation", "Settled", "For Record Purposes", "With Certificate to File Action"]
+    caseStatus = casedata.get("case_status")
+    case_status_index = get_cases_status_index(caseStatus,case_status_values)
     case_status = st.selectbox(
         "Status of the Case :red[#]",
-        ("For Conciliation", "Settled", "For Record Purposes", "With Certificate to File Action"),
-        index=None
+       case_status_values,
+        index=case_status_index
     )
     if case_status is None:
         st.error("Please select Case Status.")

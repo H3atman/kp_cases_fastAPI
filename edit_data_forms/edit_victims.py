@@ -5,12 +5,25 @@ from modules.dataValidation import VictimData_Validation
 from config.database import api_endpoint
 
 
-
-
 # Process Unidentified and Unknown Entries
 # -First Name, Middle Name, Last Name alias and Qualifier
-
-
+def process_victim_names(vicfname, vicmidname, viclastname, vicalias):
+    # List of terms to replace with None
+    terms_to_replace = ["Unidentified", "Unknown", "alias Unknown"]
+    
+    # Function to check and replace terms
+    def check_and_replace(name):
+        if name in terms_to_replace:
+            return None
+        return name
+    
+    # Process each name
+    vicfname = check_and_replace(vicfname)
+    vicmidname = check_and_replace(vicmidname)
+    viclastname = check_and_replace(viclastname)
+    vicalias = check_and_replace(vicalias)
+    
+    return vicfname, vicmidname, viclastname, vicalias
 
 
 
@@ -50,10 +63,19 @@ def editVictim(vicdetails):
     mps_cps = vicdetails.get("mps_cps")
 
     # First, Middle, and Last Name Portion
+    vicfname = vicdetails.get("vic_fname")
+    vicmidname = vicdetails.get("vic_midname")
+    viclastname = vicdetails.get("vic_lname")
+    vicalias = vicdetails.get("vic_alias")
+
+    #  Process Victim Names
+    vicfname, vicmidname, viclastname, vicalias = process_victim_names(vicfname, vicmidname, viclastname, vicalias)
+
+    # First, Middle, and Last Name Portion
     fname, mname = st.columns(2)
-    vic_fname = fname.text_input("First Name :red[#]",key="vic_fname",value=vicdetails.get("vic_fname"))
-    vic_midname = mname.text_input("Middle Name",key="vic_mname",value=vicdetails.get("vic_midname"))
-    vic_lname = st.text_input("Last Name :red[#]",key="vic_lname",value=vicdetails.get("vic_lname"))
+    vic_fname = fname.text_input("First Name :red[#]",key="vic_fname",value=vicfname)
+    vic_midname = mname.text_input("Middle Name",key="vic_mname",value=vicmidname)
+    vic_lname = st.text_input("Last Name :red[#]",key="vic_lname",value=viclastname)
 
     if not vic_fname:
         fname.warning('Please enter a first name.')
@@ -63,7 +85,7 @@ def editVictim(vicdetails):
     # Qualifier, Alias and Gender
     qlfr, alias, gndr= st.columns(3)
     vic_qlfr = qlfr.text_input("Qualifier",key="vic_qlfr",value=vicdetails.get("vic_qlfr"))
-    vic_alias = alias.text_input("Alias",key="vic_alias",value=vicdetails.get("vic_alias"))
+    vic_alias = alias.text_input("Alias",key="vic_alias",value=vicalias)
     if vic_alias is None:
         vic_alias = None
     else:

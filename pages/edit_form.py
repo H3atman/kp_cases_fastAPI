@@ -4,7 +4,7 @@ from modules.auth_utils import fetch_users, prepare_credentials, initialize_auth
 import requests
 from edit_data_forms import edit_caseDetails, edit_offenses, edit_suspects, edit_victims
 from config.database import api_endpoint
-from modules.get_data import get_victim_data
+from modules.get_data import get_victim_data, get_suspect_data, get_case_data
 
 
 def process_offense(offense, offense_class, otherOffense, case_status, check):
@@ -114,16 +114,18 @@ def editForm():
 
         with suspect:
             st.subheader("Suspect's Profile")
-            # suspect_data = suspects.addSuspect(mps_cps,ppo_cpo,pro)
+            susdetails = get_suspect_data(entry_number)
+            suspect_data = edit_suspects.editSuspect(susdetails)
 
 
         with caseDetail:
             st.subheader("Case Details")
-            # case_detail = caseDetails.case_Details(mps_cps,ppo_cpo,pro)
+            casedata = get_case_data(entry_number)
+            case_detail = edit_caseDetails.edit_case_Details(casedata)
         
         with offense:
             st.subheader("Offense :red[#]")
-            # offense_detail = offenses.addOffense()
+            offense_detail = edit_offenses.editOffense(casedata)
 
 
     # # Check completeness of case detail and offense detail

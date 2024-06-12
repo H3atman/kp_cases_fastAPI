@@ -5,6 +5,27 @@ from modules.dataValidation import SuspectData_Validation
 from config.database import api_endpoint
 
 
+# Process Unidentified and Unknown Entries
+# -First Name, Middle Name, Last Name alias and Qualifier
+def process_suspect_names(susfname, susmidname, suslastname, susalias):
+    # List of terms to replace with None
+    terms_to_replace = ["Unidentified", "Unknown", "alias Unknown"]
+    
+    # Function to check and replace terms
+    def check_and_replace(name):
+        if name in terms_to_replace:
+            return None
+        return name
+    
+    # Process each name
+    susfname = check_and_replace(susfname)
+    susmidname = check_and_replace(susmidname)
+    suslastname = check_and_replace(suslastname)
+    susalias = check_and_replace(susalias)
+    
+    return susfname, susmidname, suslastname, susalias
+
+
 @st.cache_data(ttl=1800)  # Cache data for 30 minutes
 def get_brgy_city_mun(mps_cps):
     # Make a GET request to the FastAPI endpoint
@@ -21,30 +42,60 @@ def get_brgy_city_mun(mps_cps):
 
     return brgy_values, city_mun_value, province_value
 
+def get_brgy_index(vicbrgydetails, brgy_values):
+    if vicbrgydetails in brgy_values:
+        return brgy_values.index(vicbrgydetails)
+    return None
 
-def addSuspect(mps_cps,ppo_cpo,pro):
+
+def get_gender_index(vicgenderdetails, gender_values):
+    if vicgenderdetails in ["Unidentified", "Unknown"]:
+        return None
+    if vicgenderdetails in gender_values:
+        return gender_values.index(vicgenderdetails)
+    return None
+
+
+
+def editSuspect(susdetails):
     # Initialize Barangay Values and City Mun Values
-    brgy_values, city_mun_value, province_value = get_brgy_city_mun(mps_cps)
+    brgy_values, city_mun_value, province_value = get_brgy_city_mun(susdetails.get("mps_cps"))
 
-    pro = pro
-    ppo_cpo = ppo_cpo
+    pro = susdetails.get("pro")
+    ppo_cpo = susdetails.get("ppo_cpo")
+    mps_cps = susdetails.get("mps_cps")
+
+    # First, Middle, and Last Name Portion
+    susfname = susdetails.get("sus_fname")
+    susmidname = susdetails.get("sus_midname")
+    suslastname = susdetails.get("sus_lname")
+    susalias = susdetails.get("sus_alias")
+
+    #  Process Victim Names
+    susfname, susmidname, suslastname, susalias = process_suspect_names(susfname, susmidname, suslastname, susalias)
 
     # First, Middle, and Last Name Portion
     fname, mname = st.columns(2)
-    sus_fname = fname.text_input("First Name",key="sus_fname")
-    sus_midname = mname.text_input("Middle Name",key="sus_mname")
-    sus_lname = st.text_input("Last Name",key="sus_lname")
+    sus_fname = fname.text_input("First Name",key="sus_fname",value=susfname)
+    sus_midname = mname.text_input("Middle Name",key="sus_mname",value=susmidname)
+    sus_lname = st.text_input("Last Name",key="sus_lname",value=suslastname)
+
+
 
     # Qualifier, Alias and Gender
     qlfr, alias, gndr= st.columns(3)
-    sus_qlfr = qlfr.text_input("Qualifier",key="sus_qlfr")
-    sus_alias = alias.text_input("Alias",key="sus_alias")
+    sus_qlfr = qlfr.text_input("Qualifier",key="sus_qlfr",value=susdetails.get("sus_qlfr"))
+    sus_alias = alias.text_input("Alias",key="sus_alias",value=susalias)
     if sus_alias is None:
         sus_alias = None
     else:
         sus_alias = f"alias {sus_alias}"
+
     with gndr:
-        sus_gndr = st.radio("Gender",("Male", "Female"),index=None,horizontal=True,key="sus_gndr")
+        gender_values = ["Male","Female"]
+        sus_gender_details = susdetails.get("sus_gndr")
+        gender_index = get_gender_index(sus_gender_details, gender_values)
+        sus_gndr = st.radio("Gender",gender_values,index=gender_index,horizontal=True,key="sus_gndr")
 
     # Age Group
     ageGrp, age = st.columns(2)
@@ -57,11 +108,17 @@ def addSuspect(mps_cps,ppo_cpo,pro):
     region.text_input("Region",value="Region XII",disabled=True,key="sus_region")
     sus_distprov = distprov.selectbox("District/Province",([province_value]),disabled=True,key="sus_distprov")
 
+
+
     # Address - RCity/Municipality, Barangay and House No/Street Name
     citymun, brgy = st.columns(2)
     sus_cityMun = citymun.selectbox("City/Municipality",([city_mun_value]),disabled=True,key="sus_citymun")
-    sus_brgy = brgy.selectbox("Barangay",brgy_values,placeholder="Please select a Barangay",key="sus_abrgy",index=None)
-    sus_strName = st.text_input("House No./Street Name",key="sus_strName")
+    #  Process barangay Selectbox
+    sus_brgy_details = susdetails.get("sus_brgy")
+    brgy_index = get_brgy_index(sus_brgy_details, brgy_values)
+    sus_brgy = brgy.selectbox("Barangay :red[#]",brgy_values,placeholder="Please select a Barangay",key="sus_abrgy",index=brgy_index)
+
+    sus_strName = st.text_input("House No./Street Name",key="sus_strName",value=susdetails.get("vic_strName"))
 
 
     st.write("---")

@@ -533,9 +533,26 @@ async def get_cases_count(mps_cps: str, db: Session = Depends(get_db)):
     count = db.query(models.CaseDetails).filter(models.CaseDetails.mps_cps == mps_cps).count()
     return {"count": count}
 
+
+# Get Details for Editing Entries
+
 @app.get('/get_victim_details')
 async def get_victim_details(entry_number: str, db: Session = Depends(get_db)):
     cases = db.query(models.Victim_Details).filter(models.Victim_Details.entry_number == entry_number).all()
+    if not cases:
+        raise HTTPException(status_code=404, detail="Cases not found")
+    return cases
+
+@app.get('/get_suspect_details')
+async def get_suspect_details(entry_number: str, db: Session = Depends(get_db)):
+    cases = db.query(models.Suspect_Details).filter(models.Suspect_Details.entry_number == entry_number).all()
+    if not cases:
+        raise HTTPException(status_code=404, detail="Cases not found")
+    return cases
+
+@app.get('/get_case_details')
+async def get_case_details(entry_number: str, db: Session = Depends(get_db)):
+    cases = db.query(models.CaseDetails).filter(models.CaseDetails.entry_number == entry_number).all()
     if not cases:
         raise HTTPException(status_code=404, detail="Cases not found")
     return cases

@@ -1,5 +1,4 @@
 import requests
-from config.models import CaseDetails
 from datetime import date, time
 import json
 
@@ -37,10 +36,10 @@ def update_case_details(entry_number, case_detail, offense_detail, api_url):
     if case_detail.time_committed is not None:
         data["time_committed"] = serialize_datetime(case_detail.time_committed)
 
-    print("Request data:", data) # Addedd Code for debugging
+    # print("Request data:", data) # Addedd Code for debugging
     response = requests.put(f"{api_url}/update-case-details/{entry_number}", json=data)
-    print("Response status code:", response.status_code)  # Addedd Code for debugging
-    print("Response text:", response.text)  # Addedd Code for debugging
+    # print("Response status code:", response.status_code)  # Addedd Code for debugging
+    # print("Response text:", response.text)  # Addedd Code for debugging
 
     if response.status_code == 200:
         print("Case Detail Data successfully updated in the database.")
@@ -64,10 +63,10 @@ def update_victim_details(entry_number, victim_data, api_url):
 
     victim_data = {k: v for k, v in victim_data.items() if v is not None}
 
-    print("Request data:", victim_data) # Addedd Code for debugging
+    # print("Request data:", victim_data) # Addedd Code for debugging
     response = requests.put(f"{api_url}/update-victim-details/{entry_number}", json=victim_data)
-    print("Response status code:", response.status_code)  # Addedd Code for debugging
-    print("Response text:", response.text)  # Addedd Code for debugging
+    # print("Response status code:", response.status_code)  # Addedd Code for debugging
+    # print("Response text:", response.text)  # Addedd Code for debugging
 
     if response.status_code == 200:
         print("Victim Data successfully updated in the database.")
@@ -92,10 +91,10 @@ def update_suspect_details(entry_number, suspect_data, api_url):
 
     suspect_data = {k: v for k, v in suspect_data.items() if v is not None}
 
-    print("Request data:", suspect_data) # Addedd Code for debugging
+    # print("Request data:", suspect_data) # Addedd Code for debugging
     response = requests.put(f"{api_url}/update-suspect-details/{entry_number}", json=suspect_data)
-    print("Response status code:", response.status_code)  # Addedd Code for debugging
-    print("Response text:", response.text)  # Addedd Code for debugging
+    # print("Response status code:", response.status_code)  # Addedd Code for debugging
+    # print("Response text:", response.text)  # Addedd Code for debugging
 
 
     if response.status_code == 200:

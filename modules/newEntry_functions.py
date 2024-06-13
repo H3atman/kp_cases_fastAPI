@@ -1,6 +1,5 @@
 import requests
 from config.models import CaseDetails
-import streamlit as st
 from datetime import date, time
 import json
 

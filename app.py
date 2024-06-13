@@ -49,7 +49,6 @@ if st.session_state["authentication_status"]:
             with tab1:
                 st.subheader("New Entry")
                 entryCode = newEntry(mps_cps)
-                st.write(role)
 
             with tab2:
                 encoded_data_mps(mps_cps)

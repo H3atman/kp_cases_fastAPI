@@ -1,7 +1,7 @@
 import streamlit as st
 from modules.newEntry_comp import newEntry
 from modules.auth_utils import fetch_users, prepare_credentials, initialize_authenticator
-from modules.encoded_data import encoded_data
+from modules.encoded_data import encoded_data_mps, encoded_data_ppo, encoded_data_pro
 from modules.query_cases_encoded import search_cases, display_cases
 
 # Set page configuration
@@ -33,6 +33,7 @@ if st.session_state["authentication_status"]:
     user_info = credentials["usernames"].get(username, {})
     mps_cps = user_info.get("mps_cps", "")
     ppo_cpo = user_info.get("ppo_cpo", "")
+    role = user_info.get("role","")
     st.title(f'Welcome *{mps_cps}*, *{ppo_cpo}*')
 
     # Manage navigation between pages
@@ -40,24 +41,43 @@ if st.session_state["authentication_status"]:
         st.session_state.page = "home"
 
     if st.session_state.page == "home":
-        # Create tabs for navigation
-        tab1, tab2, tab3, tab4 = st.tabs(["New Entry", "Encoded Data", "Search and Edit Entry", "Change Password"])
+        if role == "encoder":
+            # Create tabs for navigation
+            tab1, tab2, tab3, tab4 = st.tabs(["New Entry", "Encoded Data", "Search and Edit Entry", "Change Password"])
 
-        with tab1:
-            st.subheader("New Entry")
-            entryCode = newEntry(mps_cps)
+            with tab1:
+                st.subheader("New Entry")
+                entryCode = newEntry(mps_cps)
+                st.write(role)
 
-        with tab2:
-            encoded_data(mps_cps)
+            with tab2:
+                encoded_data_mps(mps_cps)
 
-        with tab3:
-            st.subheader("You can search and edit your entries here")
-            search_cases(mps_cps)
-            display_cases()
+            with tab3:
+                st.subheader("You can search and edit your entries here")
+                search_cases(mps_cps)
+                display_cases()
 
-        with tab4:
-            st.subheader("You can change your password here")
-            st.write(":red[Under Development]")
+            with tab4:
+                st.subheader("You can change your password here")
+                st.write(":red[Under Development]")
+
+        if role == "viewer":
+                        # Create tabs for navigation
+            tab1, tab2, tab3 = st.tabs(["Encoded Data", "Search and Edit Entry", "Change Password"])
+
+            with tab1:
+                encoded_data_ppo(ppo_cpo)
+
+            with tab2:
+                st.subheader("You can search and edit your entries here")
+                # search_cases(mps_cps)
+                # display_cases()
+
+            with tab3:
+                st.subheader("You can change your password here")
+                st.write(":red[Under Development]")
+
 
 elif st.session_state["authentication_status"] is False:
     st.error('Username/password is incorrect')

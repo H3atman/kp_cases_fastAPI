@@ -18,8 +18,10 @@ def prepare_credentials(users_data):
             user['username']: {
                 "name": user['username'],
                 "password": user['password'],
+                "pro":user.get('pro',''),
                 "mps_cps": user.get('mps_cps', ''),  # Include mps_cps, defaulting to an empty string if not present
-                "ppo_cpo": user.get('ppo_cpo', '')   # Include ppo_cpo, defaulting to an empty string if not present
+                "ppo_cpo": user.get('ppo_cpo', ''),   # Include ppo_cpo, defaulting to an empty string if not present
+                "role": user.get('role','')
             }
             for user in users_data
         }

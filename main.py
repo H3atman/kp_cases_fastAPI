@@ -483,6 +483,205 @@ def get_cases(mps_cps: str, db: Session = Depends(get_db)):
     # Return the DataFrame as a JSON response
     return df
 
+@app.get('/cases-ppo')
+def get_cases_ppo(ppo_cpo: str, db: Session = Depends(get_db)):
+    # Aliases for Victim_Details and Suspect_Details for aggregation
+    victims_alias = aliased(models.Victim_Details)
+    suspects_alias = aliased(models.Suspect_Details)
+
+    # Subquery to aggregate victim details
+    victim_subquery = (
+        select(
+            victims_alias.entry_number,
+            func.string_agg(
+                func.concat(
+                    victims_alias.vic_fname, ' ', victims_alias.vic_midname, ' ',
+                    victims_alias.vic_lname, ' ', victims_alias.vic_qlfr, ' ',
+                    victims_alias.vic_alias, ' (', victims_alias.vic_age, '/', victims_alias.vic_gndr, ')'
+                ), '; '
+            ).label('victim_details')
+        )
+        .filter(victims_alias.ppo_cpo == ppo_cpo)  # Filtering based on mps_cps
+        .group_by(victims_alias.entry_number)
+        .subquery()
+    )
+
+    # Subquery to aggregate suspect details
+    suspect_subquery = (
+        select(
+            suspects_alias.entry_number,
+            func.string_agg(
+                func.concat(
+                    suspects_alias.sus_fname, ' ', suspects_alias.sus_midname, ' ',
+                    suspects_alias.sus_lname, ' ', suspects_alias.sus_qlfr, ' ',
+                    suspects_alias.sus_alias, ' (', suspects_alias.sus_age, '/', suspects_alias.sus_gndr, ')'
+                ), '; '
+            ).label('suspect_details')
+        )
+        .filter(suspects_alias.ppo_cpo == ppo_cpo)  # Filtering based on mps_cps
+        .group_by(suspects_alias.entry_number)
+        .subquery()
+    )
+
+    # Main query to select case details and join with victim and suspect details
+    query = (
+        select(
+            models.CaseDetails.entry_number,
+            models.CaseDetails.mps_cps,
+            models.CaseDetails.offense,
+            models.CaseDetails.case_status,
+            models.CaseDetails.date_reported,
+            models.CaseDetails.time_reported,
+            models.CaseDetails.date_committed,
+            models.CaseDetails.time_committed,
+            victim_subquery.c.victim_details,
+            suspect_subquery.c.suspect_details
+        )
+        .outerjoin(victim_subquery, models.CaseDetails.entry_number == victim_subquery.c.entry_number)
+        .outerjoin(suspect_subquery, models.CaseDetails.entry_number == suspect_subquery.c.entry_number)
+        .filter(models.CaseDetails.ppo_cpo == ppo_cpo)  # Filtering based on mps_cps
+        .order_by(models.CaseDetails.date_encoded.desc())
+    )
+
+    # Execute the query
+    result = db.execute(query)
+
+    # Fetch all the rows
+    rows = result.fetchall()
+
+    # Convert the rows to a DataFrame
+    df = pd.DataFrame(rows, columns=[
+        "entry_number",
+        "mps_cps",
+        "offense",
+        "case_status",
+        "date_reported",
+        "time_reported",
+        "date_committed",
+        "time_committed",
+        "victim_details",
+        "suspect_details"
+    ])
+
+    # Drop the time_reported and time_committed columns if not needed
+    df = df.drop(columns=["time_reported", "time_committed"])
+
+    # Rename columns if needed
+    df = df.rename(columns={
+        "entry_number": "Entry Number",
+        "mps_cps": "Station",
+        "offense": "Offense",
+        "case_status": "Case Status",
+        "date_reported": "Date Reported",
+        "date_committed": "Date Committed",
+        "victim_details": "Victim Details",
+        "suspect_details": "Suspect Details"
+    })
+
+    # Return the DataFrame as a JSON response
+    return df
+
+
+@app.get('/cases-pro')
+def get_cases_pro(pro: str, db: Session = Depends(get_db)):
+    # Aliases for Victim_Details and Suspect_Details for aggregation
+    victims_alias = aliased(models.Victim_Details)
+    suspects_alias = aliased(models.Suspect_Details)
+
+    # Subquery to aggregate victim details
+    victim_subquery = (
+        select(
+            victims_alias.entry_number,
+            func.string_agg(
+                func.concat(
+                    victims_alias.vic_fname, ' ', victims_alias.vic_midname, ' ',
+                    victims_alias.vic_lname, ' ', victims_alias.vic_qlfr, ' ',
+                    victims_alias.vic_alias, ' (', victims_alias.vic_age, '/', victims_alias.vic_gndr, ')'
+                ), '; '
+            ).label('victim_details')
+        )
+        .filter(victims_alias.pro == pro)  # Filtering based on mps_cps
+        .group_by(victims_alias.entry_number)
+        .subquery()
+    )
+
+    # Subquery to aggregate suspect details
+    suspect_subquery = (
+        select(
+            suspects_alias.entry_number,
+            func.string_agg(
+                func.concat(
+                    suspects_alias.sus_fname, ' ', suspects_alias.sus_midname, ' ',
+                    suspects_alias.sus_lname, ' ', suspects_alias.sus_qlfr, ' ',
+                    suspects_alias.sus_alias, ' (', suspects_alias.sus_age, '/', suspects_alias.sus_gndr, ')'
+                ), '; '
+            ).label('suspect_details')
+        )
+        .filter(suspects_alias.pro == pro)  # Filtering based on mps_cps
+        .group_by(suspects_alias.entry_number)
+        .subquery()
+    )
+
+    # Main query to select case details and join with victim and suspect details
+    query = (
+        select(
+            models.CaseDetails.entry_number,
+            models.CaseDetails.ppo_cpo,
+            models.CaseDetails.mps_cps,
+            models.CaseDetails.offense,
+            models.CaseDetails.case_status,
+            models.CaseDetails.date_reported,
+            models.CaseDetails.time_reported,
+            models.CaseDetails.date_committed,
+            models.CaseDetails.time_committed,
+            victim_subquery.c.victim_details,
+            suspect_subquery.c.suspect_details
+        )
+        .outerjoin(victim_subquery, models.CaseDetails.entry_number == victim_subquery.c.entry_number)
+        .outerjoin(suspect_subquery, models.CaseDetails.entry_number == suspect_subquery.c.entry_number)
+        .filter(models.CaseDetails.pro == pro)  # Filtering based on mps_cps
+        .order_by(models.CaseDetails.date_encoded.desc())
+    )
+
+    # Execute the query
+    result = db.execute(query)
+
+    # Fetch all the rows
+    rows = result.fetchall()
+
+    # Convert the rows to a DataFrame
+    df = pd.DataFrame(rows, columns=[
+        "entry_number",
+        "ppo_cpo",
+        "mps_cps",
+        "offense",
+        "case_status",
+        "date_reported",
+        "time_reported",
+        "date_committed",
+        "time_committed",
+        "victim_details",
+        "suspect_details"
+    ])
+
+    # Drop the time_reported and time_committed columns if not needed
+    df = df.drop(columns=["time_reported", "time_committed"])
+
+    # Rename columns if needed
+    df = df.rename(columns={
+        "entry_number": "Entry Number",
+        "ppo_cpo":"PPO",
+        "mps_cps": "Station",
+        "offense": "Offense",
+        "case_status": "Case Status",
+        "date_reported": "Date Reported",
+        "date_committed": "Date Committed",
+        "victim_details": "Victim Details",
+        "suspect_details": "Suspect Details"
+    })
+
+    # Return the DataFrame as a JSON response
+    return df
 
 @app.get("/check_entry/{entry_number}")
 async def check_entry(entry_number: str, db: Session = Depends(get_db)):
@@ -597,6 +796,16 @@ async def get_cases(entry_number: str, mps_cps: str, db: Session = Depends(get_d
 @app.get('/count_cases_encoded')
 async def get_cases_count(mps_cps: str, db: Session = Depends(get_db)):
     count = db.query(models.CaseDetails).filter(models.CaseDetails.mps_cps == mps_cps).count()
+    return {"count": count}
+
+@app.get('/count_cases_encoded-ppo')
+async def get_cases_count_ppo(ppo_cpo: str, db: Session = Depends(get_db)):
+    count = db.query(models.CaseDetails).filter(models.CaseDetails.ppo_cpo == ppo_cpo).count()
+    return {"count": count}
+
+@app.get('/count_cases_encoded-pro')
+async def get_cases_count_ppo(pro: str, db: Session = Depends(get_db)):
+    count = db.query(models.CaseDetails).filter(models.CaseDetails.pro == pro).count()
     return {"count": count}
 
 

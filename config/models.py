@@ -16,6 +16,8 @@ class UserBase(Base):
     failed_login_attempts = Column(Integer, default=0)
     mps_cps = Column(String)
     ppo_cpo = Column(String)
+    role = Column(String)
+    pro = Column(String)
 
 
 class Station_Sequence(Base):

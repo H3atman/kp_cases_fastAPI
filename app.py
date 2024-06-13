@@ -33,6 +33,7 @@ if st.session_state["authentication_status"]:
     user_info = credentials["usernames"].get(username, {})
     mps_cps = user_info.get("mps_cps", "")
     ppo_cpo = user_info.get("ppo_cpo", "")
+    pro = user_info.get("pro","")
     role = user_info.get("role","")
     st.title(f'Welcome *{mps_cps}*, *{ppo_cpo}*')
 
@@ -63,20 +64,39 @@ if st.session_state["authentication_status"]:
                 st.write(":red[Under Development]")
 
         if role == "viewer":
-                        # Create tabs for navigation
-            tab1, tab2, tab3 = st.tabs(["Encoded Data", "Search and Edit Entry", "Change Password"])
+            # Create tabs for navigation
+            tab1, tab2, tab3 = st.tabs(["Encoded Data", "Extract Report", "Change Password"])
 
             with tab1:
                 encoded_data_ppo(ppo_cpo)
 
             with tab2:
-                st.subheader("You can search and edit your entries here")
+                st.subheader("You can extract report here in Detailed Crime Analysis Report Format")
+                st.write(":red[Under Development]")
                 # search_cases(mps_cps)
                 # display_cases()
 
             with tab3:
                 st.subheader("You can change your password here")
                 st.write(":red[Under Development]")
+
+        if role == "administrator":
+            # Create tabs for navigation
+            tab1, tab2, tab3 = st.tabs(["Encoded Data", "Extract Report", "Change Password"])
+
+            with tab1:
+                encoded_data_pro(pro)
+
+            with tab2:
+                st.subheader("You can extract report here in Detailed Crime Analysis Report Format")
+                st.write(":red[Under Development]")
+                # search_cases(mps_cps)
+                # display_cases()
+
+            with tab3:
+                st.subheader("You can change your password here")
+                st.write(":red[Under Development]")
+
 
 
 elif st.session_state["authentication_status"] is False:

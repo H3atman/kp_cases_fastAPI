@@ -17,6 +17,7 @@ class UserBase(Base):
     mps_cps = Column(String)
     ppo_cpo = Column(String)
     role = Column(String)
+    pro = Column(String)
 
 
 class Station_Sequence(Base):

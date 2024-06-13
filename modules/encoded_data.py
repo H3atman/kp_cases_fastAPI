@@ -87,14 +87,14 @@ def encoded_data_ppo(ppo_cpo: str):
         print(f"Request failed: {e}")
 
 
-def encoded_data_pro(mps_cps: str):
-    if not mps_cps or not api_endpoint:
+def encoded_data_pro(pro: str):
+    if not pro or not api_endpoint:
         st.error("Both MPS/CPS value and API endpoint must be provided")
         return
     
     try:
         with st.spinner("Fetching case count..."):
-            response = requests.get(f"{api_endpoint}/count_cases_encoded", params={"mps_cps": mps_cps})
+            response = requests.get(f"{api_endpoint}/count_cases_encoded-pro", params={"pro": pro})
 
             if response.status_code == 200:
                 try:
@@ -109,7 +109,7 @@ def encoded_data_pro(mps_cps: str):
         st.subheader(f"Total Number of Cases Encoded: :red[{offense_count}]")
 
         with st.spinner("Fetching case data..."):
-            response = requests.get(f"{api_endpoint}/cases", params={"mps_cps": mps_cps})
+            response = requests.get(f"{api_endpoint}/cases-pro", params={"pro": pro})
 
             if response.status_code == 200:
                 try:

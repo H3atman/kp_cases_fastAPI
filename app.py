@@ -28,7 +28,10 @@ authenticator.login(fields={'Form name': 'PRO 12 KP Cases Details Encoding User\
 
 if st.session_state["authentication_status"]:
     st.session_state['username'] = st.session_state["name"]
-    authenticator.logout()
+    if authenticator.logout():
+        st.cache_data.clear()
+        st.session_state.clear()
+        st.rerun()
     username = st.session_state['username']
     user_info = credentials["usernames"].get(username, {})
     mps_cps = user_info.get("mps_cps", "")
@@ -56,7 +59,7 @@ if st.session_state["authentication_status"]:
             with tab3:
                 st.subheader("You can search and edit your entries here")
                 search_cases(mps_cps)
-                display_cases()
+                display_cases(mps_cps)
 
             with tab4:
                 st.subheader("You can change your password here")
